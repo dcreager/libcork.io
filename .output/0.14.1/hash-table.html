@@ -1,0 +1,563 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Hash tables &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Ring buffers" href="ring-buffer.html" />
+    <link rel="prev" title="Doubly-linked lists" href="dllist.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ring-buffer.html" title="Ring buffers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dllist.html" title="Doubly-linked lists"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hash-tables">
+<span id="hash-table"></span><h1>Hash tables<a class="headerlink" href="#hash-tables" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines a hash table class.  Our hash table implementation
+is based on the public domain hash table package written in the late
+1980’s by Peter Moore at UC Berkeley.</p>
+<p>The keys and values of a libcork hash table are both represented by <code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>
+pointers.  You can also store integer keys or values, as long as you use the
+<a class="reference internal" href="basic-types.html#c.intptr_t" title="intptr_t"><code class="xref c c-type docutils literal"><span class="pre">intptr_t</span></code></a> or <a class="reference internal" href="basic-types.html#c.uintptr_t" title="uintptr_t"><code class="xref c c-type docutils literal"><span class="pre">uintptr_t</span></code></a> integral types.  (These are the only
+integer types guaranteed by the C99 standard to fit within the space used by a
+<code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>.)  The keys of the hash table can be any arbitrary type; you must
+provide two functions that control how key pointers are used to identify entries
+in the table: the <em>hasher</em> (<a class="reference internal" href="#c.cork_hash_f" title="cork_hash_f"><code class="xref c c-type docutils literal"><span class="pre">cork_hash_f</span></code></a>) and the <em>comparator</em>
+(<a class="reference internal" href="#c.cork_equals_f" title="cork_equals_f"><code class="xref c c-type docutils literal"><span class="pre">cork_equals_f</span></code></a>).  It’s your responsibility to ensure that these two
+functions are consistent with each other — i.e., if two keys are equal according
+to your comparator, they must also map to the same hash value.  (The inverse
+doesn’t need to be true; it’s fine for two keys to have the same hash value but
+not be equal.)</p>
+<dl class="type">
+<dt id="c.cork_hash_table">
+struct <code class="descname">cork_hash_table</code><a class="headerlink" href="#c.cork_hash_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>A hash table.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_new">
+struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a> *<code class="descname">cork_hash_table_new</code><span class="sig-paren">(</span>size_t<em>&nbsp;initial_size</em>, unsigned int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new hash table instance.</p>
+<p>If you know roughly how many entries you’re going to add to the hash
+table, you can pass this in as the <em>initial_size</em> parameter.  If you
+don’t know how many entries there will be, you can use <code class="docutils literal"><span class="pre">0</span></code> for this
+parameter instead.</p>
+<p>You will most likely need to provide a hashing function and a comparison
+function for the new hash table (using <a class="reference internal" href="#c.cork_hash_table_set_hash" title="cork_hash_table_set_hash"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_set_hash()</span></code></a> and
+<a class="reference internal" href="#c.cork_hash_table_set_equals" title="cork_hash_table_set_equals"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_set_equals()</span></code></a>), which will be used to compare key
+values of the entries in the table.  If you do not provide your own
+functions, the default functions will compare key pointers as-is without
+interpreting what they point to.</p>
+<p>The <em>flags</em> field is currently unused, and should be <code class="docutils literal"><span class="pre">0</span></code>.  In the future,
+this parameter will be used to let you customize the behavior of the hash
+table.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_free">
+void <code class="descname">cork_hash_table_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frees a hash table.  If you have provided a <a class="reference internal" href="#c.cork_hash_table_set_free_key" title="cork_hash_table_set_free_key"><code class="xref c c-func docutils literal"><span class="pre">free_key</span></code></a> or <a class="reference internal" href="#c.cork_hash_table_set_free_value" title="cork_hash_table_set_free_value"><code class="xref c c-func docutils literal"><span class="pre">free_value</span></code></a> callback for <em>table</em>, then we’ll
+automatically free any remaining keys and/or values.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_hash_table_entry">
+struct <code class="descname">cork_hash_table_entry</code><a class="headerlink" href="#c.cork_hash_table_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>The contents of an entry in a hash table.</p>
+<dl class="member">
+<dt id="c.cork_hash_table_entry.key">
+void  *<code class="descname">key</code><a class="headerlink" href="#c.cork_hash_table_entry.key" title="Permalink to this definition">¶</a></dt>
+<dd><p>The key for this entry.  There won’t be any other entries in the
+hash table with the same key, as determined by the comparator
+function that you provide.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_hash_table_entry.value">
+void  *<code class="descname">value</code><a class="headerlink" href="#c.cork_hash_table_entry.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value for this entry.  The entry’s value is completely opaque
+to the hash table; we’ll never need to compare or interrogate the
+values in the table.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_hash_table_entry.hash">
+<a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a>  <code class="descname">hash</code><a class="headerlink" href="#c.cork_hash_table_entry.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hash value for this entry’s key.  This field is strictly
+read-only.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="callback-functions">
+<h2>Callback functions<a class="headerlink" href="#callback-functions" title="Permalink to this headline">¶</a></h2>
+<p>You can use the callback functions in this section to customize the behavior of
+a hash table.</p>
+<dl class="function">
+<dt id="c.cork_hash_table_set_user_data">
+void <code class="descname">cork_hash_table_set_user_data</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="array.html#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_user_data</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_set_user_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lets you provide an opaque <em>user_data</em> pointer to each of the hash table’s
+callbacks.  This lets you provide additional state, other than the hash table
+itself to those callbacks.  If <em>free_user_data</em> is not <code class="docutils literal"><span class="pre">NULL</span></code>, then the
+hash table will take control of <em>user_data</em>, and will use the
+<em>free_user_data</em> function to free it when the hash table is destroyed.</p>
+</dd></dl>
+
+<div class="section" id="key-management">
+<h3>Key management<a class="headerlink" href="#key-management" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="c.cork_hash_table_set_hash">
+void <code class="descname">cork_hash_table_set_hash</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="#c.cork_hash_f" title="cork_hash_f">cork_hash_f</a><em>&nbsp;hash</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_set_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hash table will use the <code class="docutils literal"><span class="pre">hash</span></code> callback to calculate a hash value for
+each key.</p>
+<dl class="type">
+<dt id="c.cork_hash_f">
+<a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">(*cork_hash_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_f" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It’s important to use a hash function that has a uniform distribution
+of hash values for the set of values you expect to use as hash table
+keys.  In particular, you <em>should not</em> rely on there being a prime
+number of hash table bins to get the desired uniform distribution.  The
+<a class="reference internal" href="hash-values.html#hash-values"><span class="std std-ref">hash value functions</span></a> that we provide have uniform
+distribution (and are fast), and should be safe to use for most key
+types.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_set_equals">
+void <code class="descname">cork_hash_table_set_equals</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="#c.cork_equals_f" title="cork_equals_f">cork_equals_f</a><em>&nbsp;equals</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_set_equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hash table will use the <code class="docutils literal"><span class="pre">equals</span></code> callback to compare keys.</p>
+<dl class="type">
+<dt id="c.cork_equals_f">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">(*cork_equals_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, const void<em>&nbsp;*key1</em>, const void<em>&nbsp;*key2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_equals_f" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="built-in-key-types">
+<h3>Built-in key types<a class="headerlink" href="#built-in-key-types" title="Permalink to this headline">¶</a></h3>
+<p>We also provide a couple of specialized constructors for common key types, which
+prevents you from having to duplicate common hashing and comparison functions.</p>
+<dl class="function">
+<dt id="c.cork_string_hash_table_new">
+struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a> *<code class="descname">cork_string_hash_table_new</code><span class="sig-paren">(</span>size_t<em>&nbsp;initial_size</em>, unsigned int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_string_hash_table_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a hash table whose keys will be C strings.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_pointer_hash_table_new">
+struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a> *<code class="descname">cork_pointer_hash_table_new</code><span class="sig-paren">(</span>size_t<em>&nbsp;initial_size</em>, unsigned int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_pointer_hash_table_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a hash table where keys should be compared using standard pointer
+equality.  (In other words, keys should only be considered equal if they
+point to the same physical object.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="automatically-freeing-entries">
+<h3>Automatically freeing entries<a class="headerlink" href="#automatically-freeing-entries" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="c.cork_hash_table_set_free_key">
+void <code class="descname">cork_hash_table_set_free_key</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="array.html#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_set_free_key" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_set_free_value">
+void <code class="descname">cork_hash_table_set_free_value</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="array.html#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_set_free_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>If you provide <code class="docutils literal"><span class="pre">free_key</span></code> and/or <code class="docutils literal"><span class="pre">free_value</span></code> callbacks, then the hash
+table will take ownership of any keys and values that you add.  The hash
+table will use these callbacks to free each key and value when entries are
+explicitly deleted (via <a class="reference internal" href="#c.cork_hash_table_delete" title="cork_hash_table_delete"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_delete()</span></code></a> or
+<a class="reference internal" href="#c.cork_hash_table_clear" title="cork_hash_table_clear"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_clear()</span></code></a>), and when the hash table itself is
+destroyed.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="adding-and-retrieving-entries">
+<h2>Adding and retrieving entries<a class="headerlink" href="#adding-and-retrieving-entries" title="Permalink to this headline">¶</a></h2>
+<p>There are several functions that can be used to add or retrieve entries
+from a hash table.  Each one has slightly different semantics; you
+should read through them all before deciding which one to use for a
+particular use case.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Each of these functions comes in two variants.  The “normal” variant will use
+the hash table’s <a class="reference internal" href="#c.cork_hash_table_set_hash" title="cork_hash_table_set_hash"><code class="xref c c-func docutils literal"><span class="pre">hash</span></code></a> callback to
+calculate the hash value for the <em>key</em> parameter.  This is the normal way to
+interact with a hash table.</p>
+<p class="last">When using the <code class="docutils literal"><span class="pre">_hash</span></code> variant, you must calculate the hash value for each
+key yourself, and pass in this hash value as an extra parameter.  The hash
+table’s <a class="reference internal" href="#c.cork_hash_table_set_hash" title="cork_hash_table_set_hash"><code class="xref c c-func docutils literal"><span class="pre">hash</span></code></a> callback is not invoked.
+This can be more efficient, if you’ve already calculated or cached the hash
+value.  It is your responsibility to make sure that the hash values you
+provide are consistent, just like when you write a <a class="reference internal" href="#c.cork_hash_table_set_hash" title="cork_hash_table_set_hash"><code class="xref c c-func docutils literal"><span class="pre">hash</span></code></a> callback.</p>
+</div>
+<dl class="function">
+<dt id="c.cork_hash_table_get">
+void *<code class="descname">cork_hash_table_get</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_get_hash">
+void *<code class="descname">cork_hash_table_get_hash</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, <a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;hash</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the value in <em>table</em> with the given <em>key</em>.  We return
+<code class="docutils literal"><span class="pre">NULL</span></code> if there’s no corresponding entry in the table.  This means
+that, using this function, you can’t tell the difference between a
+missing entry, and an entry that’s explicitly mapped to <code class="docutils literal"><span class="pre">NULL</span></code>.  If
+you need to distinguish those cases, you should use
+<a class="reference internal" href="#c.cork_hash_table_get_entry" title="cork_hash_table_get_entry"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_get_entry()</span></code></a> instead.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_get_entry">
+struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a> *<code class="descname">cork_hash_table_get_entry</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get_entry" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_get_entry_hash">
+struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a> *<code class="descname">cork_hash_table_get_entry_hash</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, <a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;hash</em>, const void<em>&nbsp;*key</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get_entry_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the entry in <em>table</em> with the given <em>key</em>.  We return
+<code class="docutils literal"><span class="pre">NULL</span></code> if there’s no corresponding entry in the table.</p>
+<p>You are free to update the <a class="reference internal" href="#c.cork_hash_table_entry.key" title="cork_hash_table_entry.key"><code class="xref c c-member docutils literal"><span class="pre">key</span></code></a> and <a class="reference internal" href="#c.cork_hash_table_entry.value" title="cork_hash_table_entry.value"><code class="xref c c-member docutils literal"><span class="pre">value</span></code></a> fields of the entry.  However, you
+must ensure that any new key is considered “equal” to the old key,
+according to the hasher and comparator functions that you provided
+for this hash table.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_get_or_create">
+struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a> *<code class="descname">cork_hash_table_get_or_create</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*key</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;*is_new</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get_or_create" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_get_or_create_hash">
+struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a> *<code class="descname">cork_hash_table_get_or_create_hash</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, <a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;hash</em>, void<em>&nbsp;*key</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;*is_new</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_get_or_create_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the entry in <em>table</em> with the given <em>key</em>.  If there is no
+entry with the given key, it will be created.  (If we can’t create
+the new entry, we’ll return <code class="docutils literal"><span class="pre">NULL</span></code>.)  We’ll fill in the <em>is_new</em>
+output parameter to indicate whether the entry is new or not.</p>
+<p>If a new entry is created, its value will initially be <code class="docutils literal"><span class="pre">NULL</span></code>, but
+you can update this as necessary.  You can also update the entry’s
+key, though you must ensure that any new key is considered “equal” to
+the old key, according to the hasher and comparator functions that
+you provided for this hash table.  This is necessary, for instance,
+if the <em>key</em> parameter that we search for was allocated on the stack.
+We can’t save this stack key into the hash table, since it will
+disapppear as soon as the calling function finishes.  Instead, you
+must create a new key on the heap, which can be saved into the entry.
+For efficiency, you’ll only want to allocate this new heap-stored key
+if the entry is actually new, especially if there will be a lot
+successful lookups of existing keys.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_put">
+int <code class="descname">cork_hash_table_put</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*key</em>, void<em>&nbsp;*value</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;*is_new</em>, void<em>&nbsp;**old_key</em>, void<em>&nbsp;**old_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_put" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_put_hash">
+int <code class="descname">cork_hash_table_put_hash</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, <a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;hash</em>, void<em>&nbsp;*key</em>, void<em>&nbsp;*value</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;*is_new</em>, void<em>&nbsp;**old_key</em>, void<em>&nbsp;**old_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_put_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an entry to a hash table.  If there is already an entry with the
+given key, we will overwrite its key and value with the <em>key</em> and
+<em>value</em> parameters.  If the <em>is_new</em> parameter is non-<code class="docutils literal"><span class="pre">NULL</span></code>,
+we’ll fill it in to indicate whether the entry is new or already
+existed in the table.  If the <em>old_key</em> and/or <em>old_value</em> parameters
+are non-<code class="docutils literal"><span class="pre">NULL</span></code>, we’ll fill them in with the existing key and
+value.  This can be used, for instance, to finalize an overwritten
+key or value object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_delete_entry">
+void <code class="descname">cork_hash_table_delete_entry</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a><em>&nbsp;*entry</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_delete_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes <em>entry</em> from <em>table</em>.  You must ensure that <em>entry</em> refers to a
+valid, existing entry in the hash table.  This function can be more efficient
+than <a class="reference internal" href="#c.cork_hash_table_delete" title="cork_hash_table_delete"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_delete()</span></code></a> if you’ve recently retrieved a hash
+table entry using <a class="reference internal" href="#c.cork_hash_table_get_or_create" title="cork_hash_table_get_or_create"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_get_or_create()</span></code></a> or
+<a class="reference internal" href="#c.cork_hash_table_get_entry" title="cork_hash_table_get_entry"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_get_entry()</span></code></a>, since we won’t have to search for the
+entry again.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_delete">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_hash_table_delete</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, const void<em>&nbsp;*key</em>, void<em>&nbsp;**deleted_key</em>, void<em>&nbsp;**deleted_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_delete" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_table_delete_hash">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_hash_table_delete_hash</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, <a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;hash</em>, const void<em>&nbsp;*key</em>, void<em>&nbsp;**deleted_key</em>, void<em>&nbsp;**deleted_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_delete_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the entry with the given <em>key</em> from <em>table</em>.  If there isn’t
+any entry with the given key, we’ll return <code class="docutils literal"><span class="pre">false</span></code>.  If the
+<em>deleted_key</em> and/or <em>deleted_value</em> parameters are non-<code class="docutils literal"><span class="pre">NULL</span></code>,
+we’ll fill them in with the deleted key and value.  This can be used,
+for instance, to finalize the key or value object that was stored in
+the hash table entry.</p>
+<p>If you have provided a <a class="reference internal" href="#c.cork_hash_table_set_free_key" title="cork_hash_table_set_free_key"><code class="xref c c-func docutils literal"><span class="pre">free_key</span></code></a> or
+<a class="reference internal" href="#c.cork_hash_table_set_free_value" title="cork_hash_table_set_free_value"><code class="xref c c-func docutils literal"><span class="pre">free_value</span></code></a> callback for <em>table</em>,
+then we’ll automatically free the key and/or value of the deleted entry.
+(This happens before <code class="docutils literal"><span class="pre">cork_hash_table_delete</span></code> returns, so you must not
+provide a <em>deleted_key</em> and/or <em>deleted_value</em> in this case.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="other-operations">
+<h2>Other operations<a class="headerlink" href="#other-operations" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_hash_table_size">
+size_t <code class="descname">cork_hash_table_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of entries in a hash table.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_clear">
+void <code class="descname">cork_hash_table_clear</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all of the entries in a hash table, without finalizing the
+hash table itself.</p>
+<p>If you have provided a <a class="reference internal" href="#c.cork_hash_table_set_free_key" title="cork_hash_table_set_free_key"><code class="xref c c-func docutils literal"><span class="pre">free_key</span></code></a> or
+<a class="reference internal" href="#c.cork_hash_table_set_free_value" title="cork_hash_table_set_free_value"><code class="xref c c-func docutils literal"><span class="pre">free_value</span></code></a> callback for <em>table</em>,
+then we’ll automatically free any remaining keys and/or values.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_ensure_size">
+int <code class="descname">cork_hash_table_ensure_size</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, size_t<em>&nbsp;desired_count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_ensure_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures that <em>table</em> has enough space to efficiently store a certain
+number of entries.  This can be used to reduce (or eliminate) the
+number of resizing operations needed to add a large number of entries
+to the table, when you know in advance roughly how many entries there
+will be.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="iterating-through-a-hash-table">
+<h2>Iterating through a hash table<a class="headerlink" href="#iterating-through-a-hash-table" title="Permalink to this headline">¶</a></h2>
+<p>There are two strategies you can use to access all of the entries in a
+hash table: <em>mapping</em> and <em>iterating</em>.</p>
+<div class="section" id="iteration-order">
+<h3>Iteration order<a class="headerlink" href="#iteration-order" title="Permalink to this headline">¶</a></h3>
+<p>Regardless of whether you use the mapping or iteration functions, we guarantee
+that the collection of items will be processed in the same order that they were
+added to the hash table.</p>
+</div>
+<div class="section" id="mapping">
+<h3>Mapping<a class="headerlink" href="#mapping" title="Permalink to this headline">¶</a></h3>
+<p>With mapping, you write a mapping function that will be applied to each entry in
+the table.  (In this case, libcork controls the loop that steps through each
+entry.)</p>
+<dl class="function">
+<dt id="c.cork_hash_table_map">
+void <code class="descname">cork_hash_table_map</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="#c.cork_hash_table_map_f" title="cork_hash_table_map_f">cork_hash_table_map_f</a><em>&nbsp;map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the <em>map</em> function to each entry in a hash table.  The <em>map</em>
+function’s <a class="reference internal" href="#c.cork_hash_table_map_result" title="cork_hash_table_map_result"><code class="xref c c-type docutils literal"><span class="pre">cork_hash_table_map_result</span></code></a> return value can be used to
+influence the iteration.</p>
+<dl class="type">
+<dt id="c.cork_hash_table_map_f">
+enum <a class="reference internal" href="#c.cork_hash_table_map_result" title="cork_hash_table_map_result">cork_hash_table_map_result</a> <code class="descname">(*cork_hash_table_map_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a><em>&nbsp;*entry</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_map_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function that will be applied to each entry in a hash table.  The
+function’s return value can be used to influence the iteration:</p>
+<dl class="type">
+<dt id="c.cork_hash_table_map_result">
+enum <code class="descname">cork_hash_table_map_result</code><a class="headerlink" href="#c.cork_hash_table_map_result" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="var">
+<dt id="c.CORK_HASH_TABLE_CONTINUE">
+<code class="descname">CORK_HASH_TABLE_CONTINUE</code><a class="headerlink" href="#c.CORK_HASH_TABLE_CONTINUE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continue the current <a class="reference internal" href="#c.cork_hash_table_map" title="cork_hash_table_map"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_map()</span></code></a> operation.  If
+there are any remaining elements, the next one will be passed into
+another call of the <em>map</em> function.</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="c.CORK_HASH_TABLE_ABORT">
+<code class="descname">CORK_HASH_TABLE_ABORT</code><a class="headerlink" href="#c.CORK_HASH_TABLE_ABORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the current <a class="reference internal" href="#c.cork_hash_table_map" title="cork_hash_table_map"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_map()</span></code></a> operation.  No more
+entries will be processed after this one, even if there are
+remaining elements in the hash table.</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="c.CORK_HASH_TABLE_DELETE">
+<code class="descname">CORK_HASH_TABLE_DELETE</code><a class="headerlink" href="#c.CORK_HASH_TABLE_DELETE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continue the current <a class="reference internal" href="#c.cork_hash_table_map" title="cork_hash_table_map"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_map()</span></code></a> operation, but
+first delete the entry that was just processed.  If there are any
+remaining elements, the next one will be passed into another call of
+the <em>map</em> function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<p>For instance, you can manually calculate the number of entries in a hash
+table as follows (assuming you didn’t want to use the built-in
+<a class="reference internal" href="#c.cork_hash_table_size" title="cork_hash_table_size"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_size()</span></code></a> function, of course):</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">enum</span> <span class="n">cork_hash_table_map_result</span>
+<span class="nf">count_entries</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="k">struct</span> <span class="n">cork_hash_table_entry</span> <span class="o">*</span><span class="n">entry</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">size_t</span>  <span class="o">*</span><span class="n">count</span> <span class="o">=</span> <span class="n">user_data</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">count</span><span class="p">)</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">CORK_HASH_TABLE_MAP_CONTINUE</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">cork_hash_table</span>  <span class="o">*</span><span class="n">table</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">cork_hash_table_map</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">count</span><span class="p">,</span> <span class="n">count_entries</span><span class="p">);</span>
+<span class="cm">/* the number of entries is now in count */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="iterating">
+<h3>Iterating<a class="headerlink" href="#iterating" title="Permalink to this headline">¶</a></h3>
+<p>The second strategy is to iterate through the entries yourself.  Since
+the internal struture of the <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table"><code class="xref c c-type docutils literal"><span class="pre">cork_hash_table</span></code></a> type is opaque
+(and slightly more complex than a simple array), you have to use a
+special “iterator” type to manage the manual iteration.  Note that
+unlike when using a mapping function, it is <strong>not</strong> safe to delete
+entries in a hash table as you manually iterate through them.</p>
+<dl class="type">
+<dt id="c.cork_hash_table_iterator">
+struct <code class="descname">cork_hash_table_iterator</code><a class="headerlink" href="#c.cork_hash_table_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper type for manually iterating through the entries in a hash
+table.  All of the fields in this type are private.  You’ll usually
+allocate this type on the stack.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_iterator_init">
+void <code class="descname">cork_hash_table_iterator_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table" title="cork_hash_table">cork_hash_table</a><em>&nbsp;*table</em>, struct <a class="reference internal" href="#c.cork_hash_table_iterator" title="cork_hash_table_iterator">cork_hash_table_iterator</a><em>&nbsp;*iterator</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_iterator_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a new iterator for the given hash table.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_table_iterator_next">
+struct <a class="reference internal" href="#c.cork_hash_table_entry" title="cork_hash_table_entry">cork_hash_table_entry</a> *<code class="descname">cork_hash_table_iterator_next</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_hash_table_iterator" title="cork_hash_table_iterator">cork_hash_table_iterator</a><em>&nbsp;*iterator</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_table_iterator_next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next entry in <em>iterator</em>’s hash table.  If you’ve
+already iterated through all of the entries in the table, we’ll
+return <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+</dd></dl>
+
+<p>With these functions, manually counting the hash table entries looks
+like:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">cork_hash_table</span>  <span class="o">*</span><span class="n">table</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_hash_table_iterator</span>  <span class="n">iter</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_hash_table_entry</span>  <span class="o">*</span><span class="n">entry</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="n">cork_hash_table_iterator_init</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">iter</span><span class="p">);</span>
+<span class="k">while</span> <span class="p">((</span><span class="n">entry</span> <span class="o">=</span> <span class="n">cork_hash_table_iterator_next</span><span class="p">(</span><span class="o">&amp;</span><span class="n">iter</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* the number of elements is now in count */</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Hash tables</a><ul>
+<li><a class="reference internal" href="#callback-functions">Callback functions</a><ul>
+<li><a class="reference internal" href="#key-management">Key management</a></li>
+<li><a class="reference internal" href="#built-in-key-types">Built-in key types</a></li>
+<li><a class="reference internal" href="#automatically-freeing-entries">Automatically freeing entries</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#adding-and-retrieving-entries">Adding and retrieving entries</a></li>
+<li><a class="reference internal" href="#other-operations">Other operations</a></li>
+<li><a class="reference internal" href="#iterating-through-a-hash-table">Iterating through a hash table</a><ul>
+<li><a class="reference internal" href="#iteration-order">Iteration order</a></li>
+<li><a class="reference internal" href="#mapping">Mapping</a></li>
+<li><a class="reference internal" href="#iterating">Iterating</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dllist.html"
+                        title="previous chapter">Doubly-linked lists</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ring-buffer.html"
+                        title="next chapter">Ring buffers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hash-table.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ring-buffer.html" title="Ring buffers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dllist.html" title="Doubly-linked lists"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,427 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Command-line programs &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Files and directories" href="files.html" />
+    <link rel="prev" title="Ring buffers" href="ring-buffer.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="files.html" title="Files and directories"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ring-buffer.html" title="Ring buffers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="command-line-programs">
+<span id="cli"></span><h1>Command-line programs<a class="headerlink" href="#command-line-programs" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/cli.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section let you easily create complex command-line
+applications that include subcommands, in the style of the <code class="docutils literal"><span class="pre">git</span></code> or <code class="docutils literal"><span class="pre">svn</span></code>
+programs.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>If you’re designing an application where you want to provide command-line access
+to many different operations or use cases, the simplest solution is to create a
+separate executable for each one.  This can clutter up the user’s
+<code class="docutils literal"><span class="pre">$PREFIX/bin</span></code> directory, however, and can add complexity to your code base.
+Many projects instead create a single “super-command” executable, which includes
+within it all of the operations that you want to support.  You choose specific
+operations by selecting a <em>subcommand</em> on the command line.</p>
+<dl class="type">
+<dt id="c.cork_command">
+struct <code class="descname">cork_command</code><a class="headerlink" href="#c.cork_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>An opaque type describing one of the subcommands in an executable.</p>
+</dd></dl>
+
+<p>So, for instance, if you were writing a library for manipulating sets of
+objects, you could define several subcommands of a single <code class="docutils literal"><span class="pre">set</span></code> executable:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ set add &lt;filename&gt; &lt;element&gt;
+$ set query &lt;filename&gt; &lt;element&gt;
+$ set remove &lt;filename&gt; &lt;element&gt;
+$ set union -o &lt;output file&gt; &lt;file1&gt; &lt;file2&gt;
+$ set print avro &lt;filename&gt;
+$ set print json &lt;filename&gt;
+</pre></div>
+</div>
+<p>Each of these operations acts in exactly the same as if they were defined as
+separate executables:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ set-add &lt;filename&gt; &lt;element&gt;
+$ set-query &lt;filename&gt; &lt;element&gt;
+$ set-remove &lt;filename&gt; &lt;element&gt;
+$ set-union -o &lt;output file&gt; &lt;file1&gt; &lt;file2&gt;
+$ set-print-avro &lt;filename&gt;
+$ set-print-json &lt;filename&gt;
+</pre></div>
+</div>
+<p>Note that you’re not limited to one level of subcommands.  The <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code>
+subcommand, for instance, itself contains two subcommands: <code class="docutils literal"><span class="pre">avro</span></code> and
+<code class="docutils literal"><span class="pre">json</span></code>.</p>
+</div>
+<div class="section" id="leaf-commands">
+<h2>Leaf commands<a class="headerlink" href="#leaf-commands" title="Permalink to this headline">¶</a></h2>
+<p>A <em>leaf command</em> is a subcommand that represents one operation in your
+executable.  In the example above, there are six leaf commands: <code class="docutils literal"><span class="pre">set</span> <span class="pre">add</span></code>,
+<code class="docutils literal"><span class="pre">set</span> <span class="pre">query</span></code>, <code class="docutils literal"><span class="pre">set</span> <span class="pre">remove</span></code>, <code class="docutils literal"><span class="pre">set</span> <span class="pre">union</span></code>, <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span> <span class="pre">avro</span></code>, and <code class="docutils literal"><span class="pre">set</span>
+<span class="pre">print</span> <span class="pre">json</span></code>.</p>
+<p>To define a leaf command, you use the following macro:</p>
+<dl class="macro">
+<dt id="c.cork_leaf_command">
+<code class="descname">cork_leaf_command</code><span class="sig-paren">(</span>const char<em>&nbsp;*name</em>, const char<em>&nbsp;*short_description</em>, const char<em>&nbsp;*usage</em>, const char<em>&nbsp;*full_help</em>, <a class="reference internal" href="#c.cork_option_parser" title="cork_option_parser">cork_option_parser</a><em>&nbsp;parse_options</em>, run<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_leaf_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <a class="reference internal" href="#c.cork_command" title="cork_command"><code class="xref c c-type docutils literal"><span class="pre">cork_command</span></code></a> instance that defines a leaf command.  <em>name</em>
+is the name of the leaf command; this is the word that the user must type on
+the command-line to select this command.  (For <code class="docutils literal"><span class="pre">set</span> <span class="pre">add</span></code>, this would be
+<code class="docutils literal"><span class="pre">add</span></code>; for <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span> <span class="pre">avro</span></code>, this would be <code class="docutils literal"><span class="pre">avro</span></code>.)</p>
+<p><em>short_description</em>, <em>usage</em>, and <em>full_help</em> should be static strings, and
+will be used to produce various forms of <a class="reference internal" href="#cli-help"><span class="std std-ref">help text</span></a> for the
+subcommand.  <em>short_description</em> should fit into one line; this will be used
+as the short description of this leaf command when we print out a list of all
+of the subcommands that are in the command set that this leaf belongs to.
+<em>usage</em> will be printed whenever we need to print out a usage synopsis.  This
+should describe the options and arguments to the leaf command; it will be
+printed after the full name of the subcommand.  (For instance, using the
+example above, the <code class="docutils literal"><span class="pre">set</span> <span class="pre">add</span></code> command’s usage text would be <code class="docutils literal"><span class="pre">&lt;filename&gt;</span>
+<span class="pre">&lt;element&gt;</span></code>.)  <em>full_help</em> should be a longer, multi-line string that
+describes the subcommand <em>in full detail</em>.  We will automatically preface the
+help text with the usage summary for the command.</p>
+<p><em>parse_options</em> is a function that will be used to parse any command-line
+options that appear <em>after</em> the subcommand’s name on the command line.  (See
+<a class="reference internal" href="#cli-options"><span class="std std-ref">below</span></a> for more details.)  This can be <code class="docutils literal"><span class="pre">NULL</span></code> if the
+subcommand does not have any options.</p>
+<p><em>run</em> is the function that will be called to actually execute the command.
+Any options will have already been processed by the <em>parse_options</em> function;
+you should stash the option values into global or file-scope variables, and
+then use the contents of those variables in this function.  Your <em>run</em>
+function must be an instance of the <a class="reference internal" href="#c.cork_leaf_command_run" title="cork_leaf_command_run"><code class="xref c c-type docutils literal"><span class="pre">cork_leaf_command_run</span></code></a> function
+type:</p>
+<dl class="type">
+<dt id="c.cork_leaf_command_run">
+void <code class="descname">(*cork_leaf_command_run)</code><span class="sig-paren">(</span>int<em>&nbsp;argc</em>, char<em>&nbsp;**argv</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_leaf_command_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>argc</em> and <em>argv</em> parameters will describe any values that appear on
+the command line after the name of the leaf command.  This will <em>not</em>
+include any options that were processed by the command’s <em>parse_options</em>
+function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>As an example, we could define the <code class="docutils literal"><span class="pre">set</span> <span class="pre">add</span></code> command as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span>
+<span class="nf">set_add_run</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">);</span>
+
+<span class="cp">#define SET_ADD_SHORT  &quot;Adds an element to a set&quot;</span>
+<span class="cp">#define SET_ADD_USAGE  &quot;&lt;filename&gt; &lt;element&gt;&quot;</span>
+<span class="cp">#define SET_ADD_FULL \</span>
+<span class="cp">    &quot;Loads in a set from &lt;filename&gt;, and adds &lt;element&gt; to the set.  The\n&quot; \</span>
+<span class="cp">    &quot;new set will be written back out to &lt;filename&gt;.\n&quot;</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">cork_command</span>  <span class="n">set_add</span> <span class="o">=</span>
+    <span class="n">cork_leaf_command</span><span class="p">(</span><span class="s">&quot;add&quot;</span><span class="p">,</span> <span class="n">SET_ADD_SHORT</span><span class="p">,</span> <span class="n">SET_ADD_USAGE</span><span class="p">,</span> <span class="n">SET_ADD_FULL</span><span class="p">,</span>
+                      <span class="nb">NULL</span><span class="p">,</span> <span class="n">set_add_run</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="kt">void</span>
+<span class="nf">set_add_run</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* Verify that the user gave both required options... */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cork_command_show_help</span><span class="p">(</span><span class="o">&amp;</span><span class="n">set_add</span><span class="p">,</span> <span class="s">&quot;Missing set filename.&quot;</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cork_command_show_help</span><span class="p">(</span><span class="o">&amp;</span><span class="n">set_add</span><span class="p">,</span> <span class="s">&quot;Missing element to add.&quot;</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* ...and no others. */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cork_command_show_help</span><span class="p">(</span><span class="o">&amp;</span><span class="n">set_add</span><span class="p">,</span> <span class="s">&quot;Too many values on command line.&quot;</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* At this point, &lt;filename&gt; will be in argv[0], &lt;element&gt; will be in</span>
+<span class="cm">     * argv[1]. */</span>
+
+    <span class="cm">/* Do what needs to be done */</span>
+    <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_SUCCESS</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>There are a few interesting points to make.  First, note that we use
+preprocessor macros to define all of the help text for the command.  Also, note
+that <em>each</em> line (including the last) of the full help text needs to have a
+trailing newline included in the string literal.</p>
+<p>Lastly, note that we still have to perform some final validation of the command
+line arguments given by the user.  If the user hasn’t satisfied the subcommand’s
+requirements, we use the <a class="reference internal" href="#c.cork_command_show_help" title="cork_command_show_help"><code class="xref c c-func docutils literal"><span class="pre">cork_command_show_help()</span></code></a> function to print out
+a nice error message (including a usage summary of the subcommand), and then we
+halt the executable using the standard <code class="docutils literal"><span class="pre">exit</span></code> function.</p>
+</div>
+<div class="section" id="command-sets">
+<h2>Command sets<a class="headerlink" href="#command-sets" title="Permalink to this headline">¶</a></h2>
+<p>A <em>command set</em> is a collection of subcommands.  Every executable will have at
+least one command set, for the root executable itself.  It’s also possible to
+have nested command sets.  In our example above, <code class="docutils literal"><span class="pre">set</span></code> and <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code> are
+both command sets.</p>
+<p>To define a command set, you use the following macro:</p>
+<dl class="macro">
+<dt id="c.cork_command_set">
+<code class="descname">cork_command_set</code><span class="sig-paren">(</span>const char<em>&nbsp;*name</em>, const char<em>&nbsp;*short_description</em>, <a class="reference internal" href="#c.cork_option_parser" title="cork_option_parser">cork_option_parser</a><em>&nbsp;parse_options</em>, struct <a class="reference internal" href="#c.cork_command" title="cork_command">cork_command</a><em>&nbsp;**subcommands</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_command_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <a class="reference internal" href="#c.cork_command" title="cork_command"><code class="xref c c-type docutils literal"><span class="pre">cork_command</span></code></a> instance that defines a command set.  <em>name</em>
+is the name of the command set; this is the word that the user must type on
+the command-line to select this set of commands.  If the user only specifies
+the name of the command set, then we’ll print out a list of this set’s
+subcommands, along with their short descriptions.  (For instance, running
+<code class="docutils literal"><span class="pre">set</span></code> on its own would describe the <code class="docutils literal"><span class="pre">set</span> <span class="pre">add</span></code>, <code class="docutils literal"><span class="pre">set</span> <span class="pre">query</span></code>, <code class="docutils literal"><span class="pre">set</span>
+<span class="pre">remove</span></code>, <code class="docutils literal"><span class="pre">set</span> <span class="pre">union</span></code>, and <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code> subcommands.  Running <code class="docutils literal"><span class="pre">set</span>
+<span class="pre">print</span></code> on its own would describe the <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span> <span class="pre">avro</span></code> and <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span>
+<span class="pre">json</span></code> commands.)</p>
+<p><em>short_description</em>, should be a static strings, and will be used to produce
+various forms of <a class="reference internal" href="#cli-help"><span class="std std-ref">help text</span></a> for the command set.
+<em>short_description</em> should fit into one line; this will be used as the short
+description of this command when we print out a list of all of the
+subcommands that are in the command set that this command belongs to.</p>
+<p><em>parse_options</em> is a function that will be used to parse any command-line
+options that appear <em>after</em> the command set’s name on the command line, but
+<em>before</em> the name of one of the set’s subcommands.  (See <a class="reference internal" href="#cli-options"><span class="std std-ref">below</span></a> for more details.)  This can be <code class="docutils literal"><span class="pre">NULL</span></code> if the command set
+does not have any options.</p>
+<p><em>subcommands</em> should be an array of <a class="reference internal" href="#c.cork_command" title="cork_command"><code class="xref c c-type docutils literal"><span class="pre">cork_command</span></code></a> pointers.  The
+array <strong>must</strong> have a <code class="docutils literal"><span class="pre">NULL</span></code> pointer as its last element.  The order of the
+subcommands in the array will effect the order that the commands are listed
+in the command set’s help text.</p>
+</dd></dl>
+
+<p>As an example, we could define the <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code> command set as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cm">/* Assuming set_print_avro and set_print_json were already defined</span>
+<span class="cm"> * previously, using cork_leaf_command: */</span>
+<span class="k">struct</span> <span class="n">cork_command</span>  <span class="n">set_print_avro</span> <span class="o">=</span> <span class="n">cork_leaf_command</span><span class="p">(...);</span>
+<span class="k">struct</span> <span class="n">cork_command</span>  <span class="n">set_print_json</span> <span class="o">=</span> <span class="n">cork_leaf_command</span><span class="p">(...);</span>
+
+<span class="cm">/* &quot;set print&quot; command set */</span>
+<span class="k">static</span> <span class="k">struct</span> <span class="n">cork_command</span>  <span class="o">*</span><span class="n">set_print_subcommands</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">&amp;</span><span class="n">set_print_avro</span><span class="p">,</span>
+    <span class="o">&amp;</span><span class="n">set_print_json</span><span class="p">,</span>
+    <span class="nb">NULL</span>
+<span class="p">};</span>
+
+<span class="cp">#define SET_PRINT_SHORT \</span>
+<span class="cp">    &quot;Print out the contents of a set in a variety of formats&quot;</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">cork_command</span>  <span class="n">set_print</span> <span class="o">=</span>
+    <span class="n">cork_command_set</span><span class="p">(</span><span class="s">&quot;print&quot;</span><span class="p">,</span> <span class="n">SET_PRINT_SHORT</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">set_print_subcommands</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>You must define your executable’s top level of subcommands as a command set as
+well.  For instance, we could define the <code class="docutils literal"><span class="pre">set</span></code> command set as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">struct</span> <span class="n">cork_command</span>  <span class="o">*</span><span class="n">root_subcommands</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">&amp;</span><span class="n">set_add</span><span class="p">,</span>
+    <span class="o">&amp;</span><span class="n">set_query</span><span class="p">,</span>
+    <span class="o">&amp;</span><span class="n">set_remove</span><span class="p">,</span>
+    <span class="o">&amp;</span><span class="n">set_union</span><span class="p">,</span>
+    <span class="o">&amp;</span><span class="n">set_print</span><span class="p">,</span>
+    <span class="nb">NULL</span>
+<span class="p">};</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">cork_command</span>  <span class="n">root</span> <span class="o">=</span>
+    <span class="n">cork_command_set</span><span class="p">(</span><span class="s">&quot;set&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">root_subcommands</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note that we don’t need to provide a short description for the root command,
+since it doesn’t belong to any command sets.</p>
+</div>
+<div class="section" id="running-the-commands">
+<h2>Running the commands<a class="headerlink" href="#running-the-commands" title="Permalink to this headline">¶</a></h2>
+<p>Once you’ve defined all of your subcommands, your executable’s <code class="docutils literal"><span class="pre">main</span></code> function
+is trivial:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">cork_command_main</span><span class="p">(</span><span class="o">&amp;</span><span class="n">root</span><span class="p">,</span> <span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="c.cork_command_main">
+int <code class="descname">cork_command_main</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_command" title="cork_command">cork_command</a><em>&nbsp;*root</em>, int<em>&nbsp;argc</em>, char<em>&nbsp;**argv</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_command_main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a subcommand, as defined by the command-line arguments given by <em>argc</em>
+and <em>argv</em>.  <em>root</em> should define the root command set for the executable.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="help-text">
+<span id="cli-help"></span><h2>Help text<a class="headerlink" href="#help-text" title="Permalink to this headline">¶</a></h2>
+<p>The command-line programs created with this framework automatically support
+generating several flavors of help text for its subcommands.  You don’t need to
+do anything special, except for ensuring that the actual help text that you
+provide to the <a class="reference internal" href="#c.cork_leaf_command" title="cork_leaf_command"><code class="xref c c-macro docutils literal"><span class="pre">cork_leaf_command</span></code></a> and <a class="reference internal" href="#c.cork_command_set" title="cork_command_set"><code class="xref c c-macro docutils literal"><span class="pre">cork_command_set</span></code></a>
+macros defined is intelligble and useful.</p>
+<p>Your executable will automatically include a <code class="docutils literal"><span class="pre">help</span></code> command in every command
+set, as well as <code class="docutils literal"><span class="pre">--help</span></code> and <code class="docutils literal"><span class="pre">-h</span></code> options in every command set and leaf
+command.  So all of the following would print out the help text for the <code class="docutils literal"><span class="pre">set</span>
+<span class="pre">add</span></code> command:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ set help add
+$ set add --help
+$ set add -h
+</pre></div>
+</div>
+<p>And all of the following would print out the list of <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code> subcommands:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ set help print
+$ set print --help
+$ set print -h
+</pre></div>
+</div>
+<p>You can also print out the help text for a command explicitly by calling the
+following function:</p>
+<dl class="function">
+<dt id="c.cork_command_show_help">
+void <code class="descname">cork_command_show_help</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_command" title="cork_command">cork_command</a><em>&nbsp;*command</em>, const char<em>&nbsp;*message</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_command_show_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out help text for <em>command</em>.  (If it’s a leaf command, this is the
+full help text.  If it’s a command set, it’s a list of the set’s
+subcommands.)  We will preface the help text with <em>message</em> if it’s
+non-<code class="docutils literal"><span class="pre">NULL</span></code>.  (The message should not include a trailing newline.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="option-parsing">
+<span id="cli-options"></span><h2>Option parsing<a class="headerlink" href="#option-parsing" title="Permalink to this headline">¶</a></h2>
+<p>Leaf commands and command sets both let you provide a function that parse
+command-line options for the given command.  We don’t prescribe any particular
+option parsing library, you just need to conform to the interface described in
+this section.  (Note that the standard <code class="docutils literal"><span class="pre">getopt</span></code> and <code class="docutils literal"><span class="pre">getopt_long</span></code> functions
+can easily be used in an option parsing function.)</p>
+<dl class="type">
+<dt id="c.cork_option_parser">
+int <code class="descname">(*cork_option_parser)</code><span class="sig-paren">(</span>int<em>&nbsp;argc</em>, char<em>&nbsp;**argv</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_option_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should parse any command-line options that can appear at this point in the
+executable’s command line.  (The options must appear immediately after the
+name of the command that this function belongs to.  See below for several
+examples.)</p>
+<p>Your function must look for and process any options that appear at the
+beginning of <em>argv</em>.  If there are any errors processing the options, you
+should print out an error message (most likely via
+<a class="reference internal" href="#c.cork_command_show_help" title="cork_command_show_help"><code class="xref c c-func docutils literal"><span class="pre">cork_command_show_help()</span></code></a>) and exit the program, using the standard
+<code class="docutils literal"><span class="pre">exit</span></code> function, with an exit code of <code class="docutils literal"><span class="pre">EXIT_FAILURE</span></code>.</p>
+<p>If there aren’t any errors processing the options, you should return the
+number of <em>argv</em> elements that were consumed while processing the options.
+We will use this return value to update <em>argc</em> and <em>argv</em> beforing continuing
+with subcommand selection and argument processing.  (Note that <code class="docutils literal"><span class="pre">getopt</span></code>’s
+<code class="docutils literal"><span class="pre">optind</span></code> variable is exactly what you need for the return value.)</p>
+</dd></dl>
+
+<p>As mentioned above, different option parsing functions are used to parse options
+from a particular point in the command line.  Given the following command:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>$ set --opt1 print --opt2 avro --opt3 --opt4=foo &lt;filename&gt;
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">--opt1</span></code> option would be parsed by the <code class="docutils literal"><span class="pre">set</span></code> command’s parser.  The
+<code class="docutils literal"><span class="pre">--opt2</span></code> option would be parsed by the <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span></code> command’s parser.  The
+<code class="docutils literal"><span class="pre">--opt3</span></code> and <code class="docutils literal"><span class="pre">-opt4=foo</span></code> options would be parsed by the <code class="docutils literal"><span class="pre">set</span> <span class="pre">print</span> <span class="pre">avro</span></code>
+command’s parser.  And the <code class="docutils literal"><span class="pre">&lt;filename&gt;</span></code> argument would be parsed by the <code class="docutils literal"><span class="pre">set</span>
+<span class="pre">print</span> <span class="pre">avro</span></code> command’s <em>run</em> function.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Command-line programs</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#leaf-commands">Leaf commands</a></li>
+<li><a class="reference internal" href="#command-sets">Command sets</a></li>
+<li><a class="reference internal" href="#running-the-commands">Running the commands</a></li>
+<li><a class="reference internal" href="#help-text">Help text</a></li>
+<li><a class="reference internal" href="#option-parsing">Option parsing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ring-buffer.html"
+                        title="previous chapter">Ring buffers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="files.html"
+                        title="next chapter">Files and directories</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/cli.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="files.html" title="Files and directories"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ring-buffer.html" title="Ring buffers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Library version &#8212; libcork 0.15.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.15.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Symbol visibility" href="visibility.html" />
+    <link rel="prev" title="Configuring libcork" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="visibility.html" title="Symbol visibility"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="library-version">
+<span id="versions"></span><h1>Library version<a class="headerlink" href="#library-version" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The macros and functions in this section let you determine the version of the
+libcork library at compile-time and runtime, and make it easier for you to
+define similar macros and functions in your own libraries.</p>
+<div class="section" id="libcork-version">
+<h2>libcork version<a class="headerlink" href="#libcork-version" title="Permalink to this headline">¶</a></h2>
+<dl class="macro">
+<dt id="c.CORK_VERSION">
+<code class="descname">CORK_VERSION</code><a class="headerlink" href="#c.CORK_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>The libcork library version, encoded as a single number as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">major</span> <span class="o">*</span> <span class="mi">1000000</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">minor</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">+</span> <span class="n">patch</span>
+</pre></div>
+</div>
+<p>For instance, version 1.2.10 would be encoded as 1002010.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_VERSION_MAJOR">
+<code class="descname">CORK_VERSION_MAJOR</code><a class="headerlink" href="#c.CORK_VERSION_MAJOR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_VERSION_MINOR">
+<code class="descname">CORK_VERSION_MINOR</code><a class="headerlink" href="#c.CORK_VERSION_MINOR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_VERSION_PATCH">
+<code class="descname">CORK_VERSION_PATCH</code><a class="headerlink" href="#c.CORK_VERSION_PATCH" title="Permalink to this definition">¶</a></dt>
+<dd><p>The libcork library version, with each part of the version number separated
+out into separate macros.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_version_string">
+const char *<code class="descname">cork_version_string</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_version_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_revision_string">
+const char *<code class="descname">cork_revision_string</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_revision_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the libcork library version or revision as a string.  The <em>version</em> is
+the simple three-part version number (<code class="docutils literal"><span class="pre">major:minor:patch</span></code>).  The
+<em>revision</em> is an opaque string that identifies the specific revision in
+libcork’s code history.  (Right now, this is a SHA-1 git commit identifier.)</p>
+</dd></dl>
+
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p>Compile-time vs runtime</p>
+<p>There’s an important difference between the <a class="reference internal" href="#c.CORK_VERSION" title="CORK_VERSION"><code class="xref c c-macro docutils literal"><span class="pre">CORK_VERSION</span></code></a> macro and
+<a class="reference internal" href="#c.cork_version_string" title="cork_version_string"><code class="xref c c-func docutils literal"><span class="pre">cork_version_string()</span></code></a> function, even though they seemingly return the
+same information.</p>
+<p>The macro version be evaluated by the preprocessor, and so it will return the
+version that was available <em>when your code was compiled</em>.  If you later
+install a newer (but backwards-compatible) version of libcork, any code that
+called the macro will still have the original version, and not the new
+version.</p>
+<p class="last">The function version, on the other hand, calculates the version information
+<em>at runtime</em>, when the function is actually called.  That means that the
+function result will always give you the current installed libcork version,
+even as newer versions are installed on the system.</p>
+</div>
+</div>
+<div class="section" id="constructing-version-information">
+<h2>Constructing version information<a class="headerlink" href="#constructing-version-information" title="Permalink to this headline">¶</a></h2>
+<p>If you’re writing a library that uses libcork, it’s a good idea to provide your
+own version information, similar to how libcork does.</p>
+<dl class="function">
+<dt id="c.CORK_MAKE_VERSION">
+<code class="descname">CORK_MAKE_VERSION</code><span class="sig-paren">(</span>major, minor, patch<span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_MAKE_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble a <code class="docutils literal"><span class="pre">major.minor.patch</span></code> version into a single number, using the same
+pattern as <a class="reference internal" href="#c.CORK_VERSION" title="CORK_VERSION"><code class="xref c c-macro docutils literal"><span class="pre">CORK_VERSION</span></code></a>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Library version</a><ul>
+<li><a class="reference internal" href="#libcork-version">libcork version</a></li>
+<li><a class="reference internal" href="#constructing-version-information">Constructing version information</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">Configuring libcork</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="visibility.html"
+                        title="next chapter">Symbol visibility</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/versions.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="visibility.html" title="Symbol visibility"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

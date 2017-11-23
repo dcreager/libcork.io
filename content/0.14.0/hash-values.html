@@ -1,0 +1,229 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Hash values &#8212; libcork 0.14.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Unique identifiers" href="unique-ids.html" />
+    <link rel="prev" title="High-precision timestamps" href="timestamps.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="unique-ids.html" title="Unique identifiers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="timestamps.html" title="High-precision timestamps"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" accesskey="U">Basic types</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hash-values">
+<span id="id1"></span><h1>Hash values<a class="headerlink" href="#hash-values" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section can be used to produce fast, good hash
+values.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For the curious, libcork currently uses the public-domain
+<a class="reference external" href="http://code.google.com/p/smhasher/">MurmurHash3</a> as its hash
+implementation.</p>
+</div>
+<div class="section" id="hashing-in-c-code">
+<h2>Hashing in C code<a class="headerlink" href="#hashing-in-c-code" title="Permalink to this headline">¶</a></h2>
+<p>A common pattern would be something along the lines of:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">my_type</span> <span class="p">{</span>
+    <span class="kt">int</span>  <span class="n">a</span><span class="p">;</span>
+    <span class="kt">long</span>  <span class="n">b</span><span class="p">;</span>
+    <span class="kt">double</span>  <span class="n">c</span><span class="p">;</span>
+    <span class="kt">size_t</span>  <span class="n">name_length</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">cork_hash</span>
+<span class="nf">my_type_hash</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="n">my_type</span> <span class="o">*</span><span class="n">self</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* hash of &quot;struct my_type&quot; */</span>
+    <span class="n">cork_hash</span>  <span class="n">hash</span> <span class="o">=</span> <span class="mh">0xd4a130d8</span><span class="p">;</span>
+    <span class="n">hash</span> <span class="o">=</span> <span class="n">cork_hash_variable</span><span class="p">(</span><span class="n">hash</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">a</span><span class="p">);</span>
+    <span class="n">hash</span> <span class="o">=</span> <span class="n">cork_hash_variable</span><span class="p">(</span><span class="n">hash</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">b</span><span class="p">);</span>
+    <span class="n">hash</span> <span class="o">=</span> <span class="n">cork_hash_variable</span><span class="p">(</span><span class="n">hash</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">c</span><span class="p">);</span>
+    <span class="n">hash</span> <span class="o">=</span> <span class="n">cork_hash_buffer</span><span class="p">(</span><span class="n">hash</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">name_length</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">hash</span><span class="p">;</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example, the seed value (<code class="docutils literal"><span class="pre">0xd4a130d8</span></code>) is the hash of the
+constant string <code class="docutils literal"><span class="pre">&quot;struct</span> <span class="pre">my_type&quot;</span></code>.  You can produce seed values like
+this using the <a class="reference internal" href="#cork-hash"><span class="std std-ref">cork-hash</span></a> script described below:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span>$ cork-hash &quot;struct my_type&quot;
+0xd4a130d8
+</pre></div>
+</div>
+<dl class="type">
+<dt id="c.cork_hash">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a>  <code class="descname">cork_hash</code><a class="headerlink" href="#c.cork_hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="c.cork_hash_buffer">
+<a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">cork_hash_buffer</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;seed</em>, const void<em>&nbsp;*src</em>, size_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_buffer" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_hash_variable">
+<a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">cork_hash_variable</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;seed</em>, TYPE<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_hash_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Incorporate the contents of the given binary buffer or variable into a hash
+value.  For the <code class="docutils literal"><span class="pre">_variable</span></code> variant, <em>val</em> must be an lvalue visible in the
+current scope.</p>
+<p>The hash values produces by these functions can change over time, and might
+not be consistent across different platforms.  The only guarantee is that
+hash values will be consistest for the duration of the current process.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_stable_hash_buffer">
+<a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">cork_stable_hash_buffer</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;seed</em>, const void<em>&nbsp;*src</em>, size_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stable_hash_buffer" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_stable_hash_variable">
+<a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">cork_stable_hash_variable</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_hash" title="cork_hash">cork_hash</a><em>&nbsp;seed</em>, TYPE<em>&nbsp;val</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stable_hash_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stable versions of <a class="reference internal" href="#c.cork_hash_buffer" title="cork_hash_buffer"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_buffer()</span></code></a> and
+<a class="reference internal" href="#c.cork_hash_variable" title="cork_hash_variable"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_variable()</span></code></a>.  We guarantee that the hash values produced by
+this function will be consistent across different platforms, and across
+different versions of the libcork library.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_big_hash">
+<code class="descname">cork_big_hash</code><a class="headerlink" href="#c.cork_big_hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="c.cork_big_hash_buffer">
+<a class="reference internal" href="#c.cork_big_hash" title="cork_big_hash">cork_big_hash</a> <code class="descname">cork_big_hash_buffer</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_big_hash" title="cork_big_hash">cork_big_hash</a><em>&nbsp;seed</em>, const void<em>&nbsp;*src</em>, size_t<em>&nbsp;len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_big_hash_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Incorporate the contents of the given binary buffer into a “big” hash value.
+A big hash value has a much larger space of possible hash values (128 bits vs
+32).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_big_hash_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_big_hash_equal</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_big_hash" title="cork_big_hash">cork_big_hash</a><em>&nbsp;hash1</em>, <a class="reference internal" href="#c.cork_big_hash" title="cork_big_hash">cork_big_hash</a><em>&nbsp;hash2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_big_hash_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two big hash values for equality.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="hashing-from-the-command-line">
+<span id="cork-hash"></span><h2>Hashing from the command line<a class="headerlink" href="#hashing-from-the-command-line" title="Permalink to this headline">¶</a></h2>
+<p>Several parts of libcork use hash values as identifiers; you use a
+unique string to identify part of your code, and use the hash of that
+string as the actual identifier value.  We provide a command-line
+utility that you can use to produce these hash values:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cork-hash &lt;string&gt;
+</pre></div>
+</div>
+<dl class="describe">
+<dt>
+<code class="descname">&lt;string&gt;</code></dt>
+<dd><p>The string to hash.  This should be provided as a single argument on
+the command line, so if your string contains spaces or other shell
+meta-characters, you must enclose the string in quotes.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Hash values</a><ul>
+<li><a class="reference internal" href="#hashing-in-c-code">Hashing in C code</a></li>
+<li><a class="reference internal" href="#hashing-from-the-command-line">Hashing from the command line</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="timestamps.html"
+                        title="previous chapter">High-precision timestamps</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="unique-ids.html"
+                        title="next chapter">Unique identifiers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hash-values.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="unique-ids.html" title="Unique identifiers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="timestamps.html" title="High-precision timestamps"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" >Basic types</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,407 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Resizable binary buffers &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Stream processing" href="stream.html" />
+    <link rel="prev" title="Managed binary buffers" href="managed-buffer.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="stream.html" title="Stream processing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="managed-buffer.html" title="Managed binary buffers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="resizable-binary-buffers">
+<span id="buffer"></span><h1>Resizable binary buffers<a class="headerlink" href="#resizable-binary-buffers" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines a resizable binary buffer type.  This class can
+also be used to construct C strings, when you don’t know the size of
+the string in advance.</p>
+<p>This class is not reference counted; we assume that there’s a single
+owner of the buffer.  The contents of a <a class="reference internal" href="#c.cork_buffer" title="cork_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_buffer</span></code></a> are fully
+mutable.  If you want to turn the buffer into something that’s safe to
+pass between threads, you can use the <a class="reference internal" href="#c.cork_buffer_to_slice" title="cork_buffer_to_slice"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_to_slice()</span></code></a>
+or <a class="reference internal" href="#c.cork_buffer_to_managed_buffer" title="cork_buffer_to_managed_buffer"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_to_managed_buffer()</span></code></a> functions to create an
+immutable managed wrapper around the buffer.</p>
+<p>You can read the contents of the buffer by accessing the <a class="reference internal" href="#c.cork_buffer.buf" title="cork_buffer.buf"><code class="xref c c-member docutils literal"><span class="pre">buf</span></code></a> and <a class="reference internal" href="#c.cork_buffer.size" title="cork_buffer.size"><code class="xref c c-member docutils literal"><span class="pre">size</span></code></a> fields
+directly.  However, to modify the contents of a buffer, you should use
+the mutator functions described below, since they take care of
+automatically resizing the underlying buffer when necessary.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This class always creates its own copy of any data added to the
+buffer; there aren’t any methods for wrapping existing buffers
+without copying.  If you want to do that, you should use
+<a class="reference internal" href="managed-buffer.html#managed-buffer"><span class="std std-ref">Managed binary buffers</span></a> or <a class="reference internal" href="slice.html#slice"><span class="std std-ref">Binary slices</span></a>.</p>
+</div>
+<dl class="type">
+<dt id="c.cork_buffer">
+struct <code class="descname">cork_buffer</code><a class="headerlink" href="#c.cork_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A resizable binary buffer.</p>
+<dl class="member">
+<dt id="c.cork_buffer.buf">
+void *<code class="descname">buf</code><a class="headerlink" href="#c.cork_buffer.buf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current contents of the buffer.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_buffer.size">
+size_t  <code class="descname">size</code><a class="headerlink" href="#c.cork_buffer.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current size of the buffer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_init">
+void <code class="descname">cork_buffer_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_BUFFER_INIT">
+struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a> <code class="descname">CORK_BUFFER_INIT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_BUFFER_INIT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new buffer instance that you’ve allocated yourself
+(usually on the stack).  The <code class="docutils literal"><span class="pre">CORK_BUFFER_INIT</span></code> version can only be
+used as a static initializer.</p>
+<p>The preallocated <code class="docutils literal"><span class="pre">cork_buffer</span></code> instance that you provide doesn’t
+include space for the content of the buffer; this will be allocated
+automatically as content is added.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_new">
+struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a> *<code class="descname">cork_buffer_new</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate and initialize a new buffer instance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_done">
+void <code class="descname">cork_buffer_done</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalize a buffer, freeing any content that it contains.  This
+function should only be used for buffers that you allocated yourself,
+and initialized using <a class="reference internal" href="#c.cork_buffer_init" title="cork_buffer_init"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_init()</span></code></a> or
+<a class="reference internal" href="#c.CORK_BUFFER_INIT" title="CORK_BUFFER_INIT"><code class="xref c c-func docutils literal"><span class="pre">CORK_BUFFER_INIT()</span></code></a>.  You must <strong>not</strong> use this function to
+free a buffer allocated using <a class="reference internal" href="#c.cork_buffer_free" title="cork_buffer_free"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_free()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_free">
+void <code class="descname">cork_buffer_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalize and deallocate a buffer, freeing any content that it
+contains.  This function should only be used for buffers allocated
+using <a class="reference internal" href="#c.cork_buffer_new" title="cork_buffer_new"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_new()</span></code></a>.  You must <strong>not</strong> use this
+function to free a buffer initialized using
+<a class="reference internal" href="#c.cork_buffer_init" title="cork_buffer_init"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_init()</span></code></a> or <a class="reference internal" href="#c.CORK_BUFFER_INIT" title="CORK_BUFFER_INIT"><code class="xref c c-func docutils literal"><span class="pre">CORK_BUFFER_INIT()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_buffer_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer1</em>, const struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two buffers for equality.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_ensure_size">
+void <code class="descname">cork_buffer_ensure_size</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;desired_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_ensure_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that a buffer has allocated enough space to store at least
+<em>desired_size</em> bytes.  We won’t shrink the size of the buffer’s
+internal storage; if the buffer has already allocated at least
+<em>desired_size</em> bytes, the function acts as a no-op.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_byte">
+<a class="reference internal" href="basic-types.html#c.uint8_t" title="uint8_t">uint8_t</a> <code class="descname">cork_buffer_byte</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_byte" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_char">
+char <code class="descname">cork_buffer_char</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the byte or character at the given index in <em>buffer</em>.</p>
+</dd></dl>
+
+<div class="section" id="mutator-functions">
+<h2>Mutator functions<a class="headerlink" href="#mutator-functions" title="Permalink to this headline">¶</a></h2>
+<p>Most of the mutator functions defined in this section come in two
+variants: a <code class="docutils literal"><span class="pre">_set</span></code> function, which clears the buffer before adding new
+content, and an <code class="docutils literal"><span class="pre">_append</span></code> function, which retains the old content,
+adding the new content to the end of the buffer.</p>
+<p>Each mutator function will automatically append an extra <code class="docutils literal"><span class="pre">NUL</span></code> byte to
+the end of whatever content is placed into the buffer.  However, this
+<code class="docutils literal"><span class="pre">NUL</span></code> byte will <strong>not</strong> be included in the <a class="reference internal" href="#c.cork_buffer.size" title="cork_buffer.size"><code class="xref c c-member docutils literal"><span class="pre">size</span></code></a> of the buffer.  This ensures that the contents of
+any <code class="docutils literal"><span class="pre">cork_buffer</span></code> can be used as a <code class="docutils literal"><span class="pre">NUL</span></code>-terminated C string
+(assuming that there aren’t any internal <code class="docutils literal"><span class="pre">NUL</span></code>s), even if the buffer
+is constructed from a data source that doesn’t include <code class="docutils literal"><span class="pre">NUL</span></code>
+terminators.</p>
+<dl class="function">
+<dt id="c.cork_buffer_clear">
+void <code class="descname">cork_buffer_clear</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear a buffer.  This does not free any storage that the buffer has
+allocated; this storage will be reused if you add contents back to the
+buffer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_truncate">
+void <code class="descname">cork_buffer_truncate</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_truncate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Truncate a buffer so that contains no more than <em>length</em> bytes.  If the
+buffer is already shorter than this, it is not modified.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_copy">
+void <code class="descname">cork_buffer_copy</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*dest</em>, const struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_copy" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_copy">
+void <code class="descname">cork_buffer_append_copy</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*dest</em>, const struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy the contents of the <em>src</em> buffer into <em>dest</em>.  The <code class="docutils literal"><span class="pre">_set</span></code> variant
+clears the buffer first, while the <code class="docutils literal"><span class="pre">_append</span></code> variant adds <em>src</em> to whatever
+content is already there.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_set">
+void <code class="descname">cork_buffer_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const void<em>&nbsp;*src</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_set" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append">
+void <code class="descname">cork_buffer_append</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const void<em>&nbsp;*src</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy the contents of <em>src</em> into a buffer.  The <code class="docutils literal"><span class="pre">_set</span></code> variant
+clears the buffer first, while the <code class="docutils literal"><span class="pre">_append</span></code> variant adds <em>src</em> to
+whatever content is already there.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_set_string">
+void <code class="descname">cork_buffer_set_string</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_set_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_string">
+void <code class="descname">cork_buffer_append_string</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_set_literal">
+void <code class="descname">cork_buffer_set_literal</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_set_literal" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_literal">
+void <code class="descname">cork_buffer_append_literal</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_literal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy the contents of <em>str</em> (which must be a <code class="docutils literal"><span class="pre">NUL</span></code>-terminated C
+string) into a buffer.  The <code class="docutils literal"><span class="pre">_set</span></code> variants clears the buffer first,
+while the <code class="docutils literal"><span class="pre">_append</span></code> variants adds <em>str</em> to whatever content is
+already there.  The <code class="docutils literal"><span class="pre">_literal</span></code> variants only work when <em>str</em> is a C string
+literal; we use the <code class="docutils literal"><span class="pre">sizeof</span></code> operator to determine the length of the string
+at compile time.  The <code class="docutils literal"><span class="pre">_string</span></code> variants work with any C string; we use the
+builtin <code class="docutils literal"><span class="pre">strlen</span></code> function to determine the length of the string.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_printf">
+void <code class="descname">cork_buffer_printf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_printf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_vprintf">
+void <code class="descname">cork_buffer_vprintf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*format</em>, va_list<em>&nbsp;args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_vprintf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_printf">
+void <code class="descname">cork_buffer_append_printf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_printf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_vprintf">
+void <code class="descname">cork_buffer_append_vprintf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*format</em>, va_list<em>&nbsp;args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_vprintf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format data according to a <code class="docutils literal"><span class="pre">printf</span></code> format string, placing the
+result into a buffer.  The <code class="docutils literal"><span class="pre">_append</span></code> variants add the formatted
+string to whatever content is already in the buffer; the non-<code class="docutils literal"><span class="pre">_append</span></code> variants clear the buffer first.  The <code class="docutils literal"><span class="pre">_printf</span></code>
+variants are vararg functions, and take in the format string’s data
+as direct parameters.  The <code class="docutils literal"><span class="pre">_vprintf</span></code> variants can be used within
+another vararg function, and let you pass in the format string’s data
+as a C99-standard <code class="docutils literal"><span class="pre">va_list</span></code> instance.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="pretty-printing">
+<h2>Pretty-printing<a class="headerlink" href="#pretty-printing" title="Permalink to this headline">¶</a></h2>
+<p>We also provide several helper functions for adding pretty-printed content to a
+<code class="docutils literal"><span class="pre">cork_buffer</span></code>.</p>
+<dl class="function">
+<dt id="c.cork_buffer_append_indent">
+void <code class="descname">cork_buffer_append_indent</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;indent</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_indent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append <em>indent</em> spaces to <em>buffer</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_append_c_string">
+void <code class="descname">cork_buffer_append_c_string</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, const char<em>&nbsp;*str</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_c_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append the C string literal representation of <em>str</em> to <em>buffer</em>.  This will
+include opening and closing double quotes, and any non-printable characters
+will be escaped.  (We will use the standard letter-based escapes where
+possible, and fall back on <code class="docutils literal"><span class="pre">&quot;\xXX&quot;</span></code> hexadecimal escapes for other
+non-printable characters.)  The result is guaranteed to stay on a single
+line, since any embedded newlines will be converted to a <code class="docutils literal"><span class="pre">\n</span></code> escape
+sequence.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_append_hex_dump">
+void <code class="descname">cork_buffer_append_hex_dump</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;indent</em>, const char<em>&nbsp;*str</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_hex_dump" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_multiline">
+void <code class="descname">cork_buffer_append_multiline</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;indent</em>, const char<em>&nbsp;*str</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_multiline" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_buffer_append_binary">
+void <code class="descname">cork_buffer_append_binary</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;indent</em>, const char<em>&nbsp;*str</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_append_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a pretty-printed representation of <em>str</em> to <em>buffer</em>.  All of these
+functions can produce multiple lines of output.  All lines except for the
+first will be prefaced with <em>indent</em> space characters.  The final line will
+<strong>not</strong> have a trailing newline.</p>
+<p>The <code class="docutils literal"><span class="pre">hex_dump</span></code> variant will output a hex-dump representation of <em>str</em>.
+This will include the hexadecimal representation of each byte, and the actual
+character of any printable byte.</p>
+<p>The <code class="docutils literal"><span class="pre">multiline</span></code> variant appends the raw content of <em>str</em> to the buffer,
+without making any attempt to sanitize non-printable characters.  (That means
+you should only call this variant if you know that <em>str</em> contains only
+printable characters.)  If <em>str</em> itself spans multiple lines, then we’ll
+insert indentation to make sure that we satisfy the indentation rules
+described above.</p>
+<p>The <code class="docutils literal"><span class="pre">binary</span></code> variant autodetects how to best render <em>str</em>.  If it contains
+any non-printable characters, then we’ll use the <code class="docutils literal"><span class="pre">hex_dump</span></code> representation.
+If it spans multiple lines, we’ll use the <code class="docutils literal"><span class="pre">multiline</span></code> representation.
+Otherwise, we’ll append the content directly without any modification.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="other-binary-data-structures">
+<h2>Other binary data structures<a class="headerlink" href="#other-binary-data-structures" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">cork_buffer</span></code> class is the only binary data class that is mutable;
+this comes at the cost of only being usable by a single owner thread or
+function at a time.  Once you have constructed a binary string or
+payload using a <code class="docutils literal"><span class="pre">cork_buffer</span></code>, you can use the functions in this
+section to produce a corresponding instance of one of libcork’s
+sharable, immutable binary data types.</p>
+<dl class="function">
+<dt id="c.cork_buffer_to_managed_buffer">
+struct <a class="reference internal" href="managed-buffer.html#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a> *<code class="descname">cork_buffer_to_managed_buffer</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_to_managed_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="managed-buffer.html#managed-buffer"><span class="std std-ref">managed buffer</span></a> to manage the
+contents of a <code class="docutils literal"><span class="pre">cork_buffer</span></code> instance.  <em>buffer</em> must have been
+allocated on the heap (i.e., using <a class="reference internal" href="#c.cork_buffer_new" title="cork_buffer_new"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_new()</span></code></a>, and
+not <a class="reference internal" href="#c.cork_buffer_init" title="cork_buffer_init"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_init()</span></code></a>).  We take ownership of <em>buffer</em>,
+regardless of whether we’re able to successfully create a new
+<a class="reference internal" href="managed-buffer.html#c.cork_managed_buffer" title="cork_managed_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_managed_buffer</span></code></a> instance.  You must <strong>not</strong> try to free
+<em>buffer</em> yourself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_to_slice">
+int <code class="descname">cork_buffer_to_slice</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em>, struct <a class="reference internal" href="slice.html#c.cork_slice" title="cork_slice">cork_slice</a><em>&nbsp;*slice</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_to_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new <a class="reference internal" href="slice.html#slice"><span class="std std-ref">slice</span></a> to manage the contents of
+<em>buffer</em>.  <em>buffer</em> must have been allocated on the heap (i.e., using
+<a class="reference internal" href="#c.cork_buffer_new" title="cork_buffer_new"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_new()</span></code></a>, and not <a class="reference internal" href="#c.cork_buffer_init" title="cork_buffer_init"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_init()</span></code></a>).
+We take ownership of <em>buffer</em>, regardless of whether we’re able to
+successfully create a new <a class="reference internal" href="managed-buffer.html#c.cork_managed_buffer" title="cork_managed_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_managed_buffer</span></code></a> instance.
+You must <strong>not</strong> try to free <em>buffer</em> yourself.</p>
+<p>The slice will point into the contents of a new <a class="reference internal" href="managed-buffer.html#managed-buffer"><span class="std std-ref">managed buffer</span></a> instance.  The managed buffer isn’t returned
+directly, though you can create additional slices into it using the
+usual <a class="reference internal" href="slice.html#c.cork_slice" title="cork_slice"><code class="xref c c-type docutils literal"><span class="pre">cork_slice</span></code></a> methods.</p>
+<p>Regardless of whether we can initialize the slice successfully, you
+<strong>must</strong> call <a class="reference internal" href="slice.html#c.cork_slice_finish" title="cork_slice_finish"><code class="xref c c-func docutils literal"><span class="pre">cork_slice_finish()</span></code></a> on <em>slice</em> when you’re
+done with the slice.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_buffer_to_stream_consumer">
+struct <a class="reference internal" href="stream.html#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a> *<code class="descname">cork_buffer_to_stream_consumer</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buffer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_buffer_to_stream_consumer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new stream consumer that appends any received data into
+<em>buffer</em>.</p>
+<p>We do <strong>not</strong> take control of <em>buffer</em>.  You retain responsibility
+for freeing the buffer, and you must ensure that it remains allocated
+and valid for the entire lifetime of the stream consumer that we
+return.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Resizable binary buffers</a><ul>
+<li><a class="reference internal" href="#mutator-functions">Mutator functions</a></li>
+<li><a class="reference internal" href="#pretty-printing">Pretty-printing</a></li>
+<li><a class="reference internal" href="#other-binary-data-structures">Other binary data structures</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="managed-buffer.html"
+                        title="previous chapter">Managed binary buffers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="stream.html"
+                        title="next chapter">Stream processing</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/buffer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="stream.html" title="Stream processing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="managed-buffer.html" title="Managed binary buffers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

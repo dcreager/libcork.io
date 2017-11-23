@@ -1,0 +1,451 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Multithreading support &#8212; libcork 0.14.3 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Subprocesses" href="subprocess.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="subprocess.html" title="Subprocesses"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="multithreading-support">
+<span id="multithreading"></span><h1>Multithreading support<a class="headerlink" href="#multithreading-support" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/threads.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>libcork provides several functions for handling threads and writing
+thread-aware code in a portable way.</p>
+<div class="section" id="thread-ids">
+<span id="id1"></span><h2>Thread IDs<a class="headerlink" href="#thread-ids" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_thread_id">
+unsigned int <code class="descname">cork_thread_id</code><a class="headerlink" href="#c.cork_thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An identifier for a thread in the current process.  This is a portable type;
+it is not based on the “raw” thread ID used by the underlying thread
+implementation.  This type will always be equivalent to <code class="docutils literal"><span class="pre">unsigned</span> <span class="pre">int</span></code>, on
+all platforms.  Furthermore, <a class="reference internal" href="#c.CORK_THREAD_NONE" title="CORK_THREAD_NONE"><code class="xref c c-data docutils literal"><span class="pre">CORK_THREAD_NONE</span></code></a> will always refer to
+an instance of this type that we guarantee will not be used by any thread.</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="c.CORK_THREAD_NONE">
+<a class="reference internal" href="#c.cork_thread_id" title="cork_thread_id">cork_thread_id</a> <code class="descname">CORK_THREAD_NONE</code><a class="headerlink" href="#c.CORK_THREAD_NONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#c.cork_thread_id" title="cork_thread_id"><code class="xref c c-type docutils literal"><span class="pre">cork_thread_id</span></code></a> value that will not be used as the ID of any
+thread.  You can use this value to represent “no thread” in any data
+structures you create.  Moreover, we guarantee that <code class="docutils literal"><span class="pre">CORK_THREAD_NONE</span></code> will
+have the value <code class="docutils literal"><span class="pre">0</span></code>, which lets you zero-initialize a data structure
+containing a <a class="reference internal" href="#c.cork_thread_id" title="cork_thread_id"><code class="xref c c-type docutils literal"><span class="pre">cork_thread_id</span></code></a>, and have its initial state
+automatically represent “no thread”.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_current_thread_get_id">
+<a class="reference internal" href="#c.cork_thread_id" title="cork_thread_id">cork_thread_id</a> <code class="descname">cork_current_thread_get_id</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_current_thread_get_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the identifier of the currently executing thread.  This function
+works correctly for any thread in the current proces — including the main
+thread, and threads that weren’t created by <a class="reference internal" href="#c.cork_thread_new" title="cork_thread_new"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_new()</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="creating-threads">
+<span id="threads"></span><h2>Creating threads<a class="headerlink" href="#creating-threads" title="Permalink to this headline">¶</a></h2>
+<p>The functions in this section let you create and start new threads in the
+current process.  Each libcork thread is named and has a unique <a class="reference internal" href="#thread-ids"><span class="std std-ref">thread ID</span></a>.  Each thread also contains a <code class="docutils literal"><span class="pre">run</span></code> function, which defines the
+code that should be executed within the new thread.</p>
+<p>Every thread goes through the same lifecycle:</p>
+<ol class="arabic">
+<li><p class="first">You create a new thread via <a class="reference internal" href="#c.cork_thread_new" title="cork_thread_new"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_new()</span></code></a>.  At this point, the
+thread is ready to execute, but isn’t automatically started.  If you
+encounter an error before you start the thread, you must use
+<a class="reference internal" href="#c.cork_thread_free" title="cork_thread_free"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_free()</span></code></a> to free the thread object.</p>
+<p>When you create the thread, you give it a <code class="xref c c-type docutils literal"><span class="pre">cork_run_f</span></code> function,
+which defines the code that will be executed in the new thread.  You also
+provide a <code class="docutils literal"><span class="pre">user_data</span></code> value, which it gives you a place to pass data into
+and out of the thread.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Any data passed into and out of the thread via the body instance is not
+automatically synchronized or thread-safe.  You can safely pass in input
+data before calling <a class="reference internal" href="#c.cork_thread_new" title="cork_thread_new"><code class="xref c c-type docutils literal"><span class="pre">cork_thread_new</span></code></a>, and retrieve output data
+after calling <a class="reference internal" href="#c.cork_thread_join" title="cork_thread_join"><code class="xref c c-type docutils literal"><span class="pre">cork_thread_join</span></code></a>, all without requiring any extra
+synchronization effort.  While the thread is executing, however, you must
+implement your own synchronization or locking to access the contents of
+the body from some other thread.</p>
+</div>
+</li>
+<li><p class="first">You start the thread via <a class="reference internal" href="#c.cork_thread_start" title="cork_thread_start"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_start()</span></code></a>.  You must ensure that
+you don’t try to start a thread more than once.  Once you’ve started a
+thread, you no longer have responsibility for freeing it; you must ensure
+that you don’t call <a class="reference internal" href="#c.cork_thread_free" title="cork_thread_free"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_free()</span></code></a> on a thread that you’ve
+started.</p>
+</li>
+<li><p class="first">Once you’ve started a thread, you wait for it to finish via
+<a class="reference internal" href="#c.cork_thread_join" title="cork_thread_join"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_join()</span></code></a>.  Any thread can wait for any other thread to
+finish, although you are responsible for ensuring that your threads don’t
+deadlock.  However, you can only join a particular thread once.</p>
+</li>
+</ol>
+<dl class="type">
+<dt id="c.cork_thread">
+struct <code class="descname">cork_thread</code><a class="headerlink" href="#c.cork_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>A thread within the current process.  This type is opaque; you must use the
+functions defined below to interact with the thread.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_thread_new">
+struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a> *<code class="descname">cork_thread_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*name</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="array.html#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_user_data</em>, cork_run_f<em>&nbsp;run</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new thread with the given <em>name</em> that will execute <em>run</em>.  The
+thread does not start running immediately.</p>
+<p>When the thread is started, the <em>run</em> function will be called with
+<em>user_data</em> as its only parameter.  When the thread finishes (or if it is
+freed via <a class="reference internal" href="#c.cork_thread_free" title="cork_thread_free"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_free()</span></code></a> before the thread is started), we’ll use
+the <em>free_user_data</em> function to free the <em>user_data</em> value.  You can provide
+<code class="docutils literal"><span class="pre">NULL</span></code> if <em>user_data</em> shouldn’t be freed, or if you want to free it
+yourself.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you provide a <em>free_user_data</em> function, it will be called as soon as
+the thread finished.  That means that if you use
+<a class="reference internal" href="#c.cork_thread_join" title="cork_thread_join"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_join()</span></code></a> to wait for the thread to finish, the
+<em>user_data</em> value will no longer be valid when <a class="reference internal" href="#c.cork_thread_join" title="cork_thread_join"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_join()</span></code></a>
+returns.  You must either copy any necessary data out into more a more
+persistent memory location before the thread finishes, or you should use a
+<code class="docutils literal"><span class="pre">NULL</span></code> <em>free_user_data</em> function and free the <em>user_data</em> memory
+yourself once you’re sure the thread has finished.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_thread_free">
+void <code class="descname">cork_thread_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a><em>&nbsp;*thread</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free <em>thread</em>.  You can only call this function if you haven’t started the
+thread yet.  Once you start a thread, the thread is responsible for freeing
+itself when it finishes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_current_thread_get">
+struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a> *<code class="descname">cork_current_thread_get</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_current_thread_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <a class="reference internal" href="#c.cork_thread" title="cork_thread"><code class="xref c c-type docutils literal"><span class="pre">cork_thread</span></code></a> instance for the current thread.  This
+function returns <code class="docutils literal"><span class="pre">NULL</span></code> when called from the main thread (i.e., the one
+created automatically when the process starts), or from a thread that wasn’t
+created via <a class="reference internal" href="#c.cork_thread_new" title="cork_thread_new"><code class="xref c c-func docutils literal"><span class="pre">cork_thread_new()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_thread_get_name">
+const char * <code class="descname">cork_thread_get_name</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a><em>&nbsp;*thread</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_get_name" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_thread_get_id">
+<a class="reference internal" href="#c.cork_thread_id" title="cork_thread_id">cork_thread_id</a> <code class="descname">cork_thread_get_id</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a><em>&nbsp;*thread</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_get_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve information about the given thread.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_thread_start">
+int <code class="descname">cork_thread_start</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a><em>&nbsp;*thread</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start <em>thread</em>.  After calling this function, you must not try to free
+<em>thread</em> yourself; the thread will automatically free itself once it has
+finished executing and has been joined.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_thread_join">
+int <code class="descname">cork_thread_join</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_thread" title="cork_thread">cork_thread</a><em>&nbsp;*thread</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_thread_join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for <em>thread</em> to finish executing.  If the thread’s body’s <code class="docutils literal"><span class="pre">run</span></code>
+function an <a class="reference internal" href="errors.html#errors"><span class="std std-ref">error condition</span></a>, we will catch that error and
+return it ourselves.  The thread is automatically freed once it finishes
+executing.</p>
+<p>You cannot join a thread that has not been started, and once you’ve started a
+thread, you <strong>must</strong> join it exactly once.  (If you don’t join it, there’s no
+guarantee that it will be freed.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="atomic-operations">
+<span id="atomics"></span><h2>Atomic operations<a class="headerlink" href="#atomic-operations" title="Permalink to this headline">¶</a></h2>
+<p>We provide several platform-agnostic macros for implementing common
+atomic operations.</p>
+<div class="section" id="addition">
+<h3>Addition<a class="headerlink" href="#addition" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="c.cork_int_atomic_add">
+int <code class="descname">cork_int_atomic_add</code><span class="sig-paren">(</span>volatile int<em>&nbsp;*var</em>, int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_int_atomic_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uint_atomic_add">
+unsigned int <code class="descname">cork_uint_atomic_add</code><span class="sig-paren">(</span>volatile unsigned int<em>&nbsp;*var</em>, unsigned int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uint_atomic_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_size_atomic_add">
+size_t <code class="descname">cork_size_atomic_add</code><span class="sig-paren">(</span>volatile size_t<em>&nbsp;*var</em>, size_t<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_size_atomic_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically add <em>delta</em> to the variable pointed to by <em>var</em>, returning
+the result of the addition.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_int_atomic_pre_add">
+int <code class="descname">cork_int_atomic_pre_add</code><span class="sig-paren">(</span>volatile int<em>&nbsp;*var</em>, int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_int_atomic_pre_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uint_atomic_pre_add">
+unsigned int <code class="descname">cork_uint_atomic_pre_add</code><span class="sig-paren">(</span>volatile unsigned int<em>&nbsp;*var</em>, unsigned int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uint_atomic_pre_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_size_atomic_pre_add">
+size_t <code class="descname">cork_size_atomic_pre_add</code><span class="sig-paren">(</span>volatile size_t<em>&nbsp;*var</em>, size_t<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_size_atomic_pre_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically add <em>delta</em> to the variable pointed to by <em>var</em>, returning
+the value from before the addition.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="subtraction">
+<h3>Subtraction<a class="headerlink" href="#subtraction" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="c.cork_int_atomic_sub">
+int <code class="descname">cork_int_atomic_sub</code><span class="sig-paren">(</span>volatile int<em>&nbsp;*var</em>, int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_int_atomic_sub" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uint_atomic_sub">
+unsigned int <code class="descname">cork_uint_atomic_sub</code><span class="sig-paren">(</span>volatile unsigned int<em>&nbsp;*var</em>, unsigned int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uint_atomic_sub" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_size_atomic_sub">
+size_t <code class="descname">cork_size_atomic_sub</code><span class="sig-paren">(</span>volatile size_t<em>&nbsp;*var</em>, size_t<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_size_atomic_sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically subtract <em>delta</em> from the variable pointed to by <em>var</em>,
+returning the result of the subtraction.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_int_atomic_pre_sub">
+int <code class="descname">cork_int_atomic_pre_sub</code><span class="sig-paren">(</span>volatile int<em>&nbsp;*var</em>, int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_int_atomic_pre_sub" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uint_atomic_pre_sub">
+unsigned int <code class="descname">cork_uint_atomic_pre_sub</code><span class="sig-paren">(</span>volatile unsigned int<em>&nbsp;*var</em>, unsigned int<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uint_atomic_pre_sub" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_size_atomic_pre_sub">
+size_t <code class="descname">cork_size_atomic_pre_sub</code><span class="sig-paren">(</span>volatile size_t<em>&nbsp;*var</em>, size_t<em>&nbsp;delta</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_size_atomic_pre_sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically subtract <em>delta</em> from the variable pointed to by <em>var</em>,
+returning the value from before the subtraction.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="compare-and-swap">
+<h3>Compare-and-swap<a class="headerlink" href="#compare-and-swap" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="c.cork_int_cas">
+int <code class="descname">cork_int_cas</code><span class="sig-paren">(</span>volatile int_t<em>&nbsp;*var</em>, int<em>&nbsp;old_value</em>, int<em>&nbsp;new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_int_cas" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uint_cas">
+unsigned int <code class="descname">cork_uint_cas</code><span class="sig-paren">(</span>volatile uint_t<em>&nbsp;*var</em>, unsigned int<em>&nbsp;old_value</em>, unsigned int<em>&nbsp;new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uint_cas" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_size_cas">
+size_t <code class="descname">cork_size_cas</code><span class="sig-paren">(</span>volatile size_t<em>&nbsp;*var</em>, size_t<em>&nbsp;old_value</em>, size_t<em>&nbsp;new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_size_cas" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ptr_cas">
+TYPE *<code class="descname">cork_ptr_cas</code><span class="sig-paren">(</span>TYPE * volatile<em>&nbsp;*var</em>, TYPE<em>&nbsp;*old_value</em>, TYPE<em>&nbsp;*new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ptr_cas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically check whether the variable pointed to by <em>var</em> contains
+the value <em>old_value</em>, and if so, update it to contain the value
+<em>new_value</em>.  We return the value of <em>var</em> before the
+compare-and-swap.  (If this value is equal to <em>old_value</em>, then the
+compare-and-swap was successful.)</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="executing-something-once">
+<span id="once"></span><h2>Executing something once<a class="headerlink" href="#executing-something-once" title="Permalink to this headline">¶</a></h2>
+<p>The functions in this section let you ensure that a particular piece of
+code is executed exactly once, even if multiple threads attempt the
+execution at roughly the same time.</p>
+<dl class="macro">
+<dt id="c.cork_once_barrier">
+<code class="descname">cork_once_barrier</code><span class="sig-paren">(</span>name<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_once_barrier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declares a barrier that can be used with the <a class="reference internal" href="#c.cork_once" title="cork_once"><code class="xref c c-func docutils literal"><span class="pre">cork_once()</span></code></a>
+macro.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.cork_once">
+<code class="descname">cork_once</code><span class="sig-paren">(</span>barrier, call<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_once" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_once_recursive">
+<code class="descname">cork_once_recursive</code><span class="sig-paren">(</span>barrier, call<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_once_recursive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that <em>call</em> (which can be an arbitrary statement) is executed
+exactly once, regardless of how many times control reaches the call
+to <code class="docutils literal"><span class="pre">cork_once</span></code>.  If control reaches the <code class="docutils literal"><span class="pre">cork_once</span></code> call at
+roughly the same time in multiple threads, exactly one of them will
+be allowed to execute the code.  The call to <code class="docutils literal"><span class="pre">cork_once</span></code> won’t
+return until <em>call</em> has been executed.</p>
+<p>If you have multiple calls to <code class="docutils literal"><span class="pre">cork_once</span></code> that use the same
+<em>barrier</em>, then exactly one <em>call</em> will succeed.  If the <em>call</em>
+statements are different in those <code class="docutils literal"><span class="pre">cork_once</span></code> invocations, then
+it’s undefined which one gets executed.</p>
+<p>If the function that contains the <code class="docutils literal"><span class="pre">cork_once</span></code> call is recursive, then you
+should call the <code class="docutils literal"><span class="pre">_recursive</span></code> variant of the macro.  With the <code class="docutils literal"><span class="pre">_recursive</span></code>
+variant, if the same thread tries to obtain the underlying lock multiple
+times, the second and later calls will silently succeed.  With the regular
+variant, you’ll get a deadlock in this case.</p>
+</dd></dl>
+
+<p>These macros are usually used to initialize a static variable that will
+be shared across multiple threads:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">struct</span> <span class="n">my_type</span>  <span class="n">shared_value</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span>
+<span class="nf">expensive_initialization</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* do something to initialize shared_value */</span>
+<span class="p">}</span>
+
+<span class="n">cork_once_barrier</span><span class="p">(</span><span class="n">shared_value_once</span><span class="p">);</span>
+
+<span class="k">struct</span> <span class="n">my_type</span> <span class="o">*</span>
+<span class="nf">get_shared_value</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_once</span><span class="p">(</span><span class="n">shared_value_once</span><span class="p">,</span> <span class="n">expensive_initialization</span><span class="p">());</span>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="n">shared_value</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Each thread can then call <code class="docutils literal"><span class="pre">get_shared_value</span></code> to retrieve a properly
+initialized instance of <code class="docutils literal"><span class="pre">struct</span> <span class="pre">my_type</span></code>.  Regardless of how many
+threads call this function, and how often they call it, the value will
+be initialized exactly once, and will be guaranteed to be initialized
+before any thread tries to use it.</p>
+</div>
+<div class="section" id="thread-local-storage">
+<span id="tls"></span><h2>Thread-local storage<a class="headerlink" href="#thread-local-storage" title="Permalink to this headline">¶</a></h2>
+<p>The macro in this section can be used to create thread-local storage in
+a platform-agnostic manner.</p>
+<dl class="macro">
+<dt id="c.cork_tls">
+<code class="descname">cork_tls</code><span class="sig-paren">(</span>TYPE<em>&nbsp;type</em>, SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_tls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a static function called <code class="samp docutils literal"><em><span class="pre">[name]</span></em><span class="pre">_get</span></code>, which will
+return a pointer to a thread-local instance of <em>type</em>.  This is a
+static function, so it won’t be visible outside of the current
+compilation unit.</p>
+<p>When a particular thread’s instance is created for the first time, it
+will be filled with <code class="docutils literal"><span class="pre">0</span></code> bytes.  If the actual type needs more
+complex initialization before it can be used, you can create a
+wrapper struct that contains a boolean indiciating whether that
+initialization has happened:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">wrapper</span> <span class="p">{</span>
+    <span class="kt">bool</span>  <span class="n">initialized</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">real_type</span>  <span class="n">val</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">cork_tls</span><span class="p">(</span><span class="k">struct</span> <span class="n">wrapper</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">real_type</span> <span class="o">*</span>
+<span class="nf">real_type_get</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">wrapper</span> <span class="o">*</span> <span class="n">wrapper</span> <span class="o">=</span> <span class="n">wrapper_get</span><span class="p">();</span>
+    <span class="k">struct</span> <span class="n">real_type</span> <span class="o">*</span> <span class="n">real_val</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">wrapper</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">CORK_UNLIKELY</span><span class="p">(</span><span class="o">!</span><span class="n">wrapper</span><span class="o">-&gt;</span><span class="n">initialized</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">expensive_initialization</span><span class="p">(</span><span class="n">real_val</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">real_val</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It’s also not possible to provide a finalization function; if your
+thread-local variable acquires any resources or memory that needs to
+be freed when the thread finishes, you must make a “thread cleanup”
+function that you explicitly call at the end of each thread.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">On some platforms, the number of thread-local values that can be
+created by any given process is limited (i.e., on the order of 128
+or 256 values).  This means that you should limit the number of
+thread-local values you create, especially in a library.</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Multithreading support</a><ul>
+<li><a class="reference internal" href="#thread-ids">Thread IDs</a></li>
+<li><a class="reference internal" href="#creating-threads">Creating threads</a></li>
+<li><a class="reference internal" href="#atomic-operations">Atomic operations</a><ul>
+<li><a class="reference internal" href="#addition">Addition</a></li>
+<li><a class="reference internal" href="#subtraction">Subtraction</a></li>
+<li><a class="reference internal" href="#compare-and-swap">Compare-and-swap</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#executing-something-once">Executing something once</a></li>
+<li><a class="reference internal" href="#thread-local-storage">Thread-local storage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="subprocess.html"
+                        title="previous chapter">Subprocesses</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/threads.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="subprocess.html" title="Subprocesses"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.3 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

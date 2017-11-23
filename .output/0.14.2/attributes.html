@@ -1,0 +1,226 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Compiler attributes &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Memory allocation" href="allocation.html" />
+    <link rel="prev" title="Byte order" href="byte-order.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="allocation.html" title="Memory allocation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="byte-order.html" title="Byte order"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="compiler-attributes">
+<span id="attributes"></span><h1>Compiler attributes<a class="headerlink" href="#compiler-attributes" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The macros in this section define compiler-agnostic versions of several
+common compiler attributes.</p>
+<dl class="function">
+<dt id="c.CORK_LIKELY">
+<code class="descname">CORK_LIKELY</code><span class="sig-paren">(</span>expression<span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_LIKELY" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UNLIKELY">
+<code class="descname">CORK_UNLIKELY</code><span class="sig-paren">(</span>expression<span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UNLIKELY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate that the given Boolean <em>expression</em> is likely to be <code class="docutils literal"><span class="pre">true</span></code>
+or <code class="docutils literal"><span class="pre">false</span></code>, respectively.  The compiler can sometimes use this
+information to generate more efficient code.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_CONST">
+<code class="descname">CORK_ATTR_CONST</code><a class="headerlink" href="#c.CORK_ATTR_CONST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a “constant” function.  The return value of a constant
+function can only depend on its parameters.  This is slightly more
+strict than a “pure” function (declared by
+<a class="reference internal" href="#c.CORK_ATTR_PURE" title="CORK_ATTR_PURE"><code class="xref c c-macro docutils literal"><span class="pre">CORK_ATTR_PURE</span></code></a>); a constant function is not allowed to
+read from global variables, whereas a pure function is.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Note that the compiler won’t verify that your function
+meets the requirements of a constant function.  Instead, this
+attribute notifies the compiler of your intentions, which allows
+the compiler to assume more about your function when optimizing
+code that calls it.</p>
+</div>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">square</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="n">CORK_ATTR_CONST</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_MALLOC">
+<code class="descname">CORK_ATTR_MALLOC</code><a class="headerlink" href="#c.CORK_ATTR_MALLOC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a function that returns a newly allocated pointer.  The
+compiler can use this information to generate more accurate aliasing
+information, since it can infer that the result of the function
+cannot alias any other existing pointer.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="o">*</span><span class="nf">custom_malloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="n">CORK_ATTR_MALLOC</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_NOINLINE">
+<code class="descname">CORK_ATTR_NOINLINE</code><a class="headerlink" href="#c.CORK_ATTR_NOINLINE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare that a function shouldn’t be eligible for inlining.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_PRINTF">
+<code class="descname">CORK_ATTR_PRINTF</code><span class="sig-paren">(</span>format_index, args_index<span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_ATTR_PRINTF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a function that takes in <code class="docutils literal"><span class="pre">printf</span></code>-like parameters.
+<em>format_index</em> is the index (starting from 1) of the parameter that
+contains the <code class="docutils literal"><span class="pre">printf</span></code> format string.  <em>args_index</em> is the index of
+the first parameter that contains the data to format.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_PURE">
+<code class="descname">CORK_ATTR_PURE</code><a class="headerlink" href="#c.CORK_ATTR_PURE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a “pure” function.  The return value of a pure function can
+only depend on its parameters, and on global variables.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span>  <span class="n">_next_id</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">get_next_id</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">CORK_ATTR_PURE</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_SENTINEL">
+<code class="descname">CORK_ATTR_SENTINEL</code><a class="headerlink" href="#c.CORK_ATTR_SENTINEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a var-arg function whose last parameter must be a <code class="docutils literal"><span class="pre">NULL</span></code>
+sentinel value.  When the compiler supports this attribute, it will
+check the actual parameters whenever this function is called, and
+ensure that the last parameter is a <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_ATTR_UNUSED">
+<code class="descname">CORK_ATTR_UNUSED</code><a class="headerlink" href="#c.CORK_ATTR_UNUSED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a entity that might not be used.  This lets you keep
+<code class="docutils literal"><span class="pre">-Wall</span></code> activated in several cases where you’re obligated to define
+something that you don’t intend to use.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">CORK_ATTR_UNUSED</span> <span class="k">static</span> <span class="kt">void</span>
+<span class="nf">unused_function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">CORK_ATTR_UNUSED</span> <span class="kt">int</span>  <span class="n">unused_value</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_INITIALIZER">
+<code class="descname">CORK_INITIALIZER</code><span class="sig-paren">(</span>func_name<span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_INITIALIZER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a <code class="docutils literal"><span class="pre">static</span></code> function that will be automatically called at program
+startup.  If there are multiple initializer functions linked into a program,
+there is no guarantee about the order in which the functions will be called.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+
+<span class="k">static</span> <span class="nf">cork_array</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span>  <span class="n">array</span><span class="p">;</span>
+
+<span class="n">CORK_INITIALIZER</span><span class="p">(</span><span class="n">init_array</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="n">cork_array_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">array</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="byte-order.html"
+                        title="previous chapter">Byte order</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="allocation.html"
+                        title="next chapter">Memory allocation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/attributes.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="allocation.html" title="Memory allocation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="byte-order.html" title="Byte order"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,224 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Symbol visibility &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic types" href="basic-types.html" />
+    <link rel="prev" title="Configuring libcork" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="basic-types.html" title="Basic types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="symbol-visibility">
+<span id="visibility"></span><h1>Symbol visibility<a class="headerlink" href="#symbol-visibility" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>When writing a shared library, you should always be careful to explicitly mark
+which functions and other symbols are part of the library’s public API, and
+which should only be used internally by the library.  There are a number of
+benefits to doing this; there is a good summary on the <a class="reference external" href="http://gcc.gnu.org/wiki/Visibility">GCC wiki</a>.  (Note that
+even though that summary is on the GCC wiki, the notes apply equally well to
+other compilers and platforms.)</p>
+<p>libcork provides several helper macros that make it easier to do this.  We use
+these macros ourselves to define libcork’s public API.</p>
+<div class="section" id="defining-a-library-s-public-api">
+<h2>Defining a library’s public API<a class="headerlink" href="#defining-a-library-s-public-api" title="Permalink to this headline">¶</a></h2>
+<p>On some platforms (for instance, on Windows), you must declare each public
+function and symbol differently depending on whether you’re compiling the
+library that <em>defines</em> the symbol, or a library or program that <em>uses</em> the
+symbol.  The first is called an <em>export</em>, the second an <em>import</em>.  On other
+platforms (for instance, GCC on Linux), the declaration of a public symbol is
+the same regardless of whether you’re exporting or importing the symbol.
+libcork provides macros that let you explicitly declare a symbol as an export or
+an import in a platform-independent way.</p>
+<dl class="macro">
+<dt id="c.CORK_EXPORT">
+<code class="descname">CORK_EXPORT</code><a class="headerlink" href="#c.CORK_EXPORT" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_IMPORT">
+<code class="descname">CORK_IMPORT</code><a class="headerlink" href="#c.CORK_IMPORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicitly declare that a symbol should be exported from the current shared
+library, or imported from some other shared library.</p>
+</dd></dl>
+
+<p>However, you will rarely need to use these macros directly.  Instead, when
+writing a new shared library, you should declare a new preprocessor macro
+(specific to the new library), which you’ll use when declaring the library’s
+public API.  For instance, if you’re creating a new library called
+<em>libfoo</em>, you would declare a new preprocessor macro called <code class="docutils literal"><span class="pre">FOO_API</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#if !defined(FOO_API)</span>
+<span class="cp">#define FOO_API  CORK_IMPORT</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>This ensures that anyone who wants to <em>use</em> libfoo doesn’t need to do anything
+special; the <code class="docutils literal"><span class="pre">FOO_API</span></code> macro will default to importing the symbols from
+libfoo’s public API.</p>
+<p>When <em>building</em> libfoo, you must set up your build system to define this
+variable differently; since you need to <em>export</em> the symbols in this case, the
+<code class="docutils literal"><span class="pre">FOO_API</span></code> macro should be set to <code class="docutils literal"><span class="pre">CORK_EXPORT</span></code>.  Each build system will have
+a different way to do this.  In CMake, for instance, you’d add the following:</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span></span><span class="nb">set_target_properties</span><span class="p">(</span><span class="s">libfoo</span> <span class="s">PROPERTIES</span>
+    <span class="s">COMPILE_DEFINITIONS</span> <span class="s">FOO_API=CORK_EXPORT</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Then, in all of your header files, you should use your new <code class="docutils literal"><span class="pre">FOO_API</span></code> macro
+when declaring each function or symbol in the public API:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">FOO_API</span> <span class="kt">int</span>
+<span class="nf">foo_load_from_file</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+
+<span class="n">FOO_API</span> <span class="kt">void</span>
+<span class="nf">foo_do_something_great</span><span class="p">(</span><span class="kt">int</span> <span class="n">flags</span><span class="p">);</span>
+
+<span class="k">extern</span> <span class="n">FOO_API</span>  <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">foo_name</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="local-symbols">
+<h2>Local symbols<a class="headerlink" href="#local-symbols" title="Permalink to this headline">¶</a></h2>
+<p>Normally, if you need a function to be local, and not be exported as part of the
+library’s public API, you can just declare it <code class="docutils literal"><span class="pre">static</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span>
+<span class="nf">file_local_function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* This function is not visible outside of this file. */</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This works great as long as the function is only needed within the current
+source file.  Sometimes, though, you need to define a function that can be used
+in other source files within the same library, but which shouldn’t be visible
+outside of the library.  To do this, you should define the function using the
+<a class="reference internal" href="#c.CORK_LOCAL" title="CORK_LOCAL"><code class="xref c c-macro docutils literal"><span class="pre">CORK_LOCAL</span></code></a> macro.</p>
+<dl class="macro">
+<dt id="c.CORK_LOCAL">
+<code class="descname">CORK_LOCAL</code><a class="headerlink" href="#c.CORK_LOCAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a symbol that should be visible in any source file within the current
+library, but not visible outside of the library.</p>
+</dd></dl>
+
+<p>As an example:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">CORK_LOCAL</span> <span class="kt">int</span>
+<span class="nf">library_local_function</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* This function is visible in other files, but not outside of the</span>
+<span class="cm">     * library. */</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Since you’re going to use this function in multiple files, you’ll want to
+declare the function in a header file.  However, since the function is not part
+of the public API, this should <em>not</em> be defined in a public header file (that
+is, one that’s installed along with the shared library).  Instead, you should
+include a private header file that’s only available in your library’s source
+code archive, and which should not be installed with the other public header
+files.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Symbol visibility</a><ul>
+<li><a class="reference internal" href="#defining-a-library-s-public-api">Defining a library’s public API</a></li>
+<li><a class="reference internal" href="#local-symbols">Local symbols</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">Configuring libcork</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="basic-types.html"
+                        title="next chapter">Basic types</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/visibility.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="basic-types.html" title="Basic types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Managed binary buffers &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Resizable binary buffers" href="buffer.html" />
+    <link rel="prev" title="Binary slices" href="slice.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="buffer.html" title="Resizable binary buffers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="slice.html" title="Binary slices"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="managed-binary-buffers">
+<span id="managed-buffer"></span><h1>Managed binary buffers<a class="headerlink" href="#managed-binary-buffers" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines an interface for handling reference-counted binary
+buffers.  The <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_managed_buffer</span></code></a> type wraps a buffer with a
+simple reference count, and takes care of freeing the necessary
+resources when the reference count drops to zero.  There should only be
+a single <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_managed_buffer</span></code></a> instance for any given buffer,
+regardless of how many threads or functions access that buffer.  Each
+thread or function that uses the buffer does so via a
+<a class="reference internal" href="slice.html#c.cork_slice" title="cork_slice"><code class="xref c c-type docutils literal"><span class="pre">cork_slice</span></code></a> instance.  This type is meant to be allocated
+directly on the stack (or in some other managed storage), and keeps a
+pointer to the managed buffer instance that it slices.  As its name
+implies, a slice can refer to a subset of the buffer.</p>
+<dl class="type">
+<dt id="c.cork_managed_buffer">
+struct <code class="descname">cork_managed_buffer</code><a class="headerlink" href="#c.cork_managed_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A “managed buffer”, which wraps a buffer with a simple reference
+count.</p>
+<p>Managed buffer consumers should consider all of the fields of this
+class private.  Managed buffer implementors should fill in this
+fields when constructing a new <code class="docutils literal"><span class="pre">cork_managed_buffer</span></code> instance.</p>
+<dl class="member">
+<dt id="c.cork_managed_buffer.buf">
+const void  *<code class="descname">buf</code><a class="headerlink" href="#c.cork_managed_buffer.buf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The buffer that this instance manages.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_managed_buffer.size">
+size_t  <code class="descname">size</code><a class="headerlink" href="#c.cork_managed_buffer.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of <code class="xref c c-member docutils literal"><span class="pre">buf</span></code>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_managed_buffer.ref_count">
+volatile int  <code class="descname">ref_count</code><a class="headerlink" href="#c.cork_managed_buffer.ref_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A reference count for the buffer.  If this drops to <code class="docutils literal"><span class="pre">0</span></code>, the
+buffer will be finalized.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_managed_buffer.iface">
+struct <a class="reference internal" href="#c.cork_managed_buffer_iface" title="cork_managed_buffer_iface">cork_managed_buffer_iface</a>  *<code class="descname">iface</code><a class="headerlink" href="#c.cork_managed_buffer.iface" title="Permalink to this definition">¶</a></dt>
+<dd><p>The managed buffer implementation for this instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_managed_buffer_ref">
+struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a> *<code class="descname">cork_managed_buffer_ref</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically increase the reference count of a managed buffer.  This
+function is thread-safe.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_managed_buffer_unref">
+void <code class="descname">cork_managed_buffer_unref</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_unref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically decrease the reference count of a managed buffer.  If the
+reference count falls to <code class="docutils literal"><span class="pre">0</span></code>, the instance is freed.  This function
+is thread-safe.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_managed_buffer_slice">
+int <code class="descname">cork_managed_buffer_slice</code><span class="sig-paren">(</span>struct <a class="reference internal" href="slice.html#c.cork_slice" title="cork_slice">cork_slice</a><em>&nbsp;*dest</em>, struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;offset</em>, size_t<em>&nbsp;length</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_slice" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_managed_buffer_slice_offset">
+int <code class="descname">cork_managed_buffer_slice_offset</code><span class="sig-paren">(</span>struct <a class="reference internal" href="slice.html#c.cork_slice" title="cork_slice">cork_slice</a><em>&nbsp;*dest</em>, struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a><em>&nbsp;*buffer</em>, size_t<em>&nbsp;offset</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_slice_offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a new slice that refers to a subset of a managed buffer.
+The <em>offset</em> and <em>length</em> parameters identify the subset.  (For the
+<code class="docutils literal"><span class="pre">_slice_offset</span></code> variant, the <em>length</em> is calculated automatically
+to include all of the managed buffer content starting from <em>offset</em>.)
+If these parameters don’t refer to a valid portion of the buffer, we
+return <code class="docutils literal"><span class="pre">false</span></code>, and you must not try to deference the slice’s
+<a class="reference internal" href="slice.html#c.cork_slice.buf" title="cork_slice.buf"><code class="xref c c-member docutils literal"><span class="pre">buf</span></code></a> pointer.  If the slice is valid, we
+return <code class="docutils literal"><span class="pre">true</span></code>.</p>
+<p>Regardless of whether the new slice is valid, you <strong>must</strong> ensure
+that you call <a class="reference internal" href="slice.html#c.cork_slice_finish" title="cork_slice_finish"><code class="xref c c-func docutils literal"><span class="pre">cork_slice_finish()</span></code></a> when you are done with
+the slice.</p>
+</dd></dl>
+
+<div class="section" id="predefined-managed-buffer-implementations">
+<h2>Predefined managed buffer implementations<a class="headerlink" href="#predefined-managed-buffer-implementations" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_managed_buffer_new_copy">
+struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a> *<code class="descname">cork_managed_buffer_new_copy</code><span class="sig-paren">(</span>const void<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_new_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a copy of <em>buf</em>, and allocate a new managed buffer to manage
+this copy.  The copy will automatically be freed when the managed
+buffer’s reference count drops to <code class="docutils literal"><span class="pre">0</span></code>.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_managed_buffer_freer">
+void <code class="descname">(*cork_managed_buffer_freer)</code><span class="sig-paren">(</span>void<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_freer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A finalization function for a managed buffer created by
+<a class="reference internal" href="#c.cork_managed_buffer_new" title="cork_managed_buffer_new"><code class="xref c c-func docutils literal"><span class="pre">cork_managed_buffer_new()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_managed_buffer_new">
+struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a> *<code class="descname">cork_managed_buffer_new</code><span class="sig-paren">(</span>const void<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em>, <a class="reference internal" href="#c.cork_managed_buffer_freer" title="cork_managed_buffer_freer">cork_managed_buffer_freer</a><em>&nbsp;free</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a new managed buffer to manage an existing buffer (<em>buf</em>).
+The existing buffer is <em>not</em> copied; the new managed buffer instance
+takes control of it.  When the managed buffer’s reference count drops
+to <code class="docutils literal"><span class="pre">0</span></code>, it will call <em>free</em> to finalize <em>buf</em>.</p>
+<p>This is a helper function, and keeps you from having to write a
+complete custom managed buffer implementation when you don’t need to
+store any additional state in the managed buffer object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <em>free</em> function is <em>not</em> responsible for freeing the
+<code class="docutils literal"><span class="pre">cork_managed_buffer</span></code> instance itself.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="custom-managed-buffer-implementations">
+<h2>Custom managed buffer implementations<a class="headerlink" href="#custom-managed-buffer-implementations" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_managed_buffer_iface">
+struct <code class="descname">cork_managed_buffer_iface</code><a class="headerlink" href="#c.cork_managed_buffer_iface" title="Permalink to this definition">¶</a></dt>
+<dd><p>The interface of methods that managed buffer implementations must
+provide.</p>
+<dl class="member">
+<dt id="c.cork_managed_buffer_iface.free">
+void <code class="descname">(*free)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_managed_buffer" title="cork_managed_buffer">cork_managed_buffer</a><em>&nbsp;*self</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_managed_buffer_iface.free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free the contents of a managed buffer, and the
+<code class="docutils literal"><span class="pre">cork_managed_buffer</span></code> instance itself.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Managed binary buffers</a><ul>
+<li><a class="reference internal" href="#predefined-managed-buffer-implementations">Predefined managed buffer implementations</a></li>
+<li><a class="reference internal" href="#custom-managed-buffer-implementations">Custom managed buffer implementations</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="slice.html"
+                        title="previous chapter">Binary slices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="buffer.html"
+                        title="next chapter">Resizable binary buffers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/managed-buffer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="buffer.html" title="Resizable binary buffers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="slice.html" title="Binary slices"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

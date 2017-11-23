@@ -1,0 +1,203 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Unique identifiers &#8212; libcork 0.14.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Byte order" href="byte-order.html" />
+    <link rel="prev" title="Hash values" href="hash-values.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="byte-order.html" title="Byte order"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hash-values.html" title="Hash values"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" accesskey="U">Basic types</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="unique-identifiers">
+<span id="unique-ids"></span><h1>Unique identifiers<a class="headerlink" href="#unique-identifiers" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section let you define compile-time unique identifiers.
+These identifiers are simple C variables, and each one is guaranteed to be
+unique within the context of a single execution of your program.  They are <em>not</em>
+appropriate for use as external identifiers — for instance, for serializing
+into long-term storage or sending via a communications channel to another
+process.</p>
+<dl class="type">
+<dt id="c.cork_uid">
+<code class="descname">cork_uid</code><a class="headerlink" href="#c.cork_uid" title="Permalink to this definition">¶</a></dt>
+<dd><p>A unique identifier.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_UID_NONE">
+<a class="reference internal" href="#c.cork_uid" title="cork_uid">cork_uid</a>  <code class="descname">CORK_UID_NONE</code><a class="headerlink" href="#c.CORK_UID_NONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A unique identifier value that means “no identifier”.  This is guaranteed to
+be distinct from all other unique identifiers.  It is invalid to call
+<a class="reference internal" href="#c.cork_uid_hash" title="cork_uid_hash"><code class="xref c c-func docutils literal"><span class="pre">cork_uid_hash()</span></code></a>, <code class="xref c c-func docutils literal"><span class="pre">cork_uid_id()</span></code>, or <a class="reference internal" href="#c.cork_uid_name" title="cork_uid_name"><code class="xref c c-func docutils literal"><span class="pre">cork_uid_name()</span></code></a> on
+this identifier.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.cork_uid_define">
+<code class="descname">cork_uid_define</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;id</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uid_define" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_uid_define_named">
+<code class="descname">cork_uid_define_named</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;id</em>, const char<em>&nbsp;*name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uid_define_named" title="Permalink to this definition">¶</a></dt>
+<dd><p>You use the <a class="reference internal" href="#c.cork_uid_define" title="cork_uid_define"><code class="xref c c-func docutils literal"><span class="pre">cork_uid_define()</span></code></a> macro to define a new unique identifier
+with the given C identifier <em>id</em>.  The <code class="docutils literal"><span class="pre">_define</span></code> variant also uses <em>id</em> as
+the identifier’s human-readable name; the <code class="docutils literal"><span class="pre">_define_named</span></code> variant let’s you
+provide a separate human-readable name.  Within the context of a single
+execution of this program, this identifier is guaranteed to be distinct from
+any other identifier, regardless of which library the identifiers are defined
+in.</p>
+<p>In the same compilation unit, you can then use the C identifier <em>id</em> to
+retrieve the <a class="reference internal" href="#c.cork_uid" title="cork_uid"><code class="xref c c-type docutils literal"><span class="pre">cork_uid</span></code></a> instance for this identifier.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The unique identifier objects are declared <code class="docutils literal"><span class="pre">static</span></code>, so they are only
+directly visible (using the C identifier <em>id</em>) in the same compilation
+unit as the <a class="reference internal" href="#c.cork_uid_define" title="cork_uid_define"><code class="xref c c-func docutils literal"><span class="pre">cork_uid_define()</span></code></a> call that created the identifier.
+The resulting <a class="reference internal" href="#c.cork_uid" title="cork_uid"><code class="xref c c-type docutils literal"><span class="pre">cork_uid</span></code></a> value, however, can be passed around the
+rest of your code however you want.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_uid_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_uid_equal</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_uid" title="cork_uid">cork_uid</a><em>&nbsp;id1</em>, const <a class="reference internal" href="#c.cork_uid" title="cork_uid">cork_uid</a><em>&nbsp;id2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uid_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether two <a class="reference internal" href="#c.cork_uid" title="cork_uid"><code class="xref c c-type docutils literal"><span class="pre">cork_uid</span></code></a> values refer to the same unique
+identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_uid_hash">
+<a class="reference internal" href="hash-values.html#c.cork_hash" title="cork_hash">cork_hash</a> <code class="descname">cork_uid_hash</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_uid" title="cork_uid">cork_uid</a><em>&nbsp;id</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uid_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="hash-values.html#hash-values"><span class="std std-ref">hash value</span></a> for the given identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_uid_name">
+const char *<code class="descname">cork_uid_name</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_uid" title="cork_uid">cork_uid</a><em>&nbsp;id</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_uid_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the given unique identifier.</p>
+</dd></dl>
+
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+
+<span class="n">cork_uid_define</span><span class="p">(</span><span class="n">test_id</span><span class="p">);</span>
+
+<span class="kt">int</span>
+<span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_uid</span>  <span class="n">id</span> <span class="o">=</span> <span class="n">test_id</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Identifier %p has name %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">id</span><span class="p">,</span> <span class="n">cork_uid_name</span><span class="p">(</span><span class="n">id</span><span class="p">));</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Unique identifiers</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hash-values.html"
+                        title="previous chapter">Hash values</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="byte-order.html"
+                        title="next chapter">Byte order</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/unique-ids.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="byte-order.html" title="Byte order"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hash-values.html" title="Hash values"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" >Basic types</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

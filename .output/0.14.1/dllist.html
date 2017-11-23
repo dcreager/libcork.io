@@ -1,0 +1,420 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Doubly-linked lists &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Hash tables" href="hash-table.html" />
+    <link rel="prev" title="Stream processing" href="stream.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="hash-table.html" title="Hash tables"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="stream.html" title="Stream processing"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="doubly-linked-lists">
+<span id="dllist"></span><h1>Doubly-linked lists<a class="headerlink" href="#doubly-linked-lists" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines a doubly-linked list data structure.  The structure
+is “invasive”, since you must place an instance of the
+<a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a> type into the type whose instances will be
+stored in the list.  The list itself is represented by the
+<a class="reference internal" href="#c.cork_dllist" title="cork_dllist"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist</span></code></a> type.</p>
+<p>As an example, we could define the following types for storing groups,
+as well as the users within each group:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">group</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">group_name</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="n">members</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">user</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">username</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">real_name</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">cork_dllist_item</span>  <span class="n">list</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Note that both <code class="docutils literal"><span class="pre">cork_dllist</span></code> and <code class="docutils literal"><span class="pre">cork_dllist_item</span></code> are embedded
+directly into our domain-specific types.  This means that every list
+operation defined in this section is guaranteed to succeed, since no
+memory operations will be involved.  (The list and any items will have
+already been allocated before you try to call the list function.)</p>
+<p>Like with any embedded <code class="docutils literal"><span class="pre">struct</span></code>, you can use the
+<a class="reference internal" href="basic-types.html#c.cork_container_of" title="cork_container_of"><code class="xref c c-func docutils literal"><span class="pre">cork_container_of()</span></code></a> macro to obtain a pointer to a <code class="docutils literal"><span class="pre">struct</span>
+<span class="pre">user</span></code> if you’re given a pointer to a <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a>.</p>
+<dl class="type">
+<dt id="c.cork_dllist">
+struct <code class="descname">cork_dllist</code><a class="headerlink" href="#c.cork_dllist" title="Permalink to this definition">¶</a></dt>
+<dd><p>A doubly-linked list.  The list itself is represented by a sentinel
+element, representing the empty list.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_dllist_item">
+struct <code class="descname">cork_dllist_item</code><a class="headerlink" href="#c.cork_dllist_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>An element of a doubly-linked list.  This type will usually be
+embedded within the type whose instances will be stored in the list.</p>
+<dl class="member">
+<dt id="c.cork_dllist_item.next">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">next</code><a class="headerlink" href="#c.cork_dllist_item.next" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_item.prev">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">prev</code><a class="headerlink" href="#c.cork_dllist_item.prev" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pointer to the next (or previous) element in the list.  If this
+element marks the end (or beginning) of the list, then <em>next</em> (or
+<em>prev</em>) will point to the list’s sentinel value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_init">
+void <code class="descname">cork_dllist_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_DLLIST_INIT">
+struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a> <code class="descname">CORK_DLLIST_INIT</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_DLLIST_INIT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a doubly-linked list.  The list will initially be empty.</p>
+<p>The second variant is a static initializer, that lets you initialize a list
+at compile time, rather than runtime.  You must pass in the name of the list
+for this to work, since we need to be able to extract pointers into the list
+object.</p>
+</dd></dl>
+
+<div class="section" id="querying-a-list">
+<h2>Querying a list<a class="headerlink" href="#querying-a-list" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_dllist_size">
+size_t <code class="descname">cork_dllist_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of elements in <em>list</em>.</p>
+<p>This operation runs in <span class="math">\(O(n)\)</span> time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_is_empty">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_dllist_is_empty</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>list</em> is empty.</p>
+<p>This operation runs in <span class="math">\(O(1)\)</span> time.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="editing-a-list">
+<h2>Editing a list<a class="headerlink" href="#editing-a-list" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_dllist_add_to_head">
+void <code class="descname">cork_dllist_add_to_head</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_to_head" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_add_to_tail">
+void <code class="descname">cork_dllist_add_to_tail</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_to_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds <em>element</em> to <em>list</em>.  The <code class="docutils literal"><span class="pre">_head</span></code> variant adds the new element to the
+beginning of the list; the <code class="docutils literal"><span class="pre">_tail</span></code> variant adds it to the end.</p>
+<p>You are responsible for allocating the list element yourself, most likely by
+allocating the <code class="docutils literal"><span class="pre">struct</span></code> that you’ve embedded <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a>
+into.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function assumes that <em>element</em> isn’t already a member of a different
+list.  You’re responsible for calling <a class="reference internal" href="#c.cork_dllist_remove" title="cork_dllist_remove"><code class="xref c c-func docutils literal"><span class="pre">cork_dllist_remove()</span></code></a> if
+this isn’t the case.  (If you don’t, the other list will become
+malformed.)</p>
+</div>
+<p>This operation runs in <span class="math">\(O(1)\)</span> time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_add_after">
+void <code class="descname">cork_dllist_add_after</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*pred</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_after" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_add_before">
+void <code class="descname">cork_dllist_add_before</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*succ</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_before" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds <em>element</em> to the same list that <em>pred</em> or <em>succ</em> belong to.  The
+<code class="docutils literal"><span class="pre">_after</span></code> variant ensures that <em>element</em> appears in the list immediately
+after <em>pred</em>.  The <code class="docutils literal"><span class="pre">_before</span></code> variant ensures that <em>element</em> appears in the
+list immediately before <em>succ</em>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function assumes that <em>element</em> isn’t already a member of a different
+list.  You’re responsible for calling <a class="reference internal" href="#c.cork_dllist_remove" title="cork_dllist_remove"><code class="xref c c-func docutils literal"><span class="pre">cork_dllist_remove()</span></code></a> if
+this isn’t the case.  (If you don’t, the other list will become
+malformed.)</p>
+</div>
+<p>This operation runs in <span class="math">\(O(1)\)</span> time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_add_list_to_head">
+void <code class="descname">cork_dllist_add_list_to_head</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*dest</em>, struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_list_to_head" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_add_list_to_tail">
+void <code class="descname">cork_dllist_add_list_to_tail</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*dest</em>, struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_add_list_to_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves all of the elements in <em>src</em> to <em>dest</em>.  The <code class="docutils literal"><span class="pre">_head</span></code> variant moves
+the elements to the beginning of <em>dest</em>; the <code class="docutils literal"><span class="pre">_tail</span></code> variant moves them to
+the end.  After these functions return, <em>src</em> will be empty.</p>
+<p>This operation runs in <span class="math">\(O(1)\)</span> time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_remove">
+void <code class="descname">cork_dllist_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes <em>element</em> from the list that it currently belongs to.  (Note
+that you don’t have to pass in a pointer to that list.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must not call this function on a list’s sentinel element.</p>
+</div>
+<p>This operation runs in <span class="math">\(O(1)\)</span> time.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="iterating-through-a-list">
+<h2>Iterating through a list<a class="headerlink" href="#iterating-through-a-list" title="Permalink to this headline">¶</a></h2>
+<p>There are two strategies you can use to access all of the elements in a
+doubly-linked list: <em>visiting</em> and <em>iterating</em>.  With visiting, you write
+a visitor function, which will be applied to each element in the list.
+(In this case, libcork controls the loop that steps through each
+element.)</p>
+<dl class="function">
+<dt id="c.cork_dllist_visit">
+int <code class="descname">cork_dllist_visit</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="#c.cork_dllist_visit_f" title="cork_dllist_visit_f">cork_dllist_visit_f</a><em>&nbsp;*func</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_visit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a function to each element in <em>list</em>.  The function is allowed
+to remove the current element from the list; this will not affect our
+ability to iterate through the remainder of the list.  The function
+will be given a pointer to the <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a> for each
+element; you can use <a class="reference internal" href="basic-types.html#c.cork_container_of" title="cork_container_of"><code class="xref c c-func docutils literal"><span class="pre">cork_container_of()</span></code></a> to get a pointer to the
+actual element type.</p>
+<p>If your visitor function ever returns a non-zero value, we will abort the
+iteration and return that value from <code class="docutils literal"><span class="pre">cork_dllist_visit</span></code>.  If your function
+always returns <code class="docutils literal"><span class="pre">0</span></code>, then you will visit all of the elements in <em>list</em>, and
+we’ll return <code class="docutils literal"><span class="pre">0</span></code> from <code class="docutils literal"><span class="pre">cork_dllist_visit</span></code>.</p>
+<dl class="type">
+<dt id="c.cork_dllist_visit_f">
+int <code class="descname">cork_dllist_visit_f</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_visit_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that can be applied to each element in a doubly-linked list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>For instance, you can manually calculate the number of elements in a
+list as follows (assuming you didn’t want to use the built-in
+<a class="reference internal" href="#c.cork_dllist_size" title="cork_dllist_size"><code class="xref c c-func docutils literal"><span class="pre">cork_dllist_size()</span></code></a> function, of course):</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span>
+<span class="nf">count_elements</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="k">struct</span> <span class="n">cork_dllist_item</span> <span class="o">*</span><span class="n">element</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">size_t</span>  <span class="o">*</span><span class="n">count</span> <span class="o">=</span> <span class="n">ud</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">count</span><span class="p">)</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">list</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">cork_dllist_visit</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">count</span><span class="p">,</span> <span class="n">count_elements</span><span class="p">);</span>  <span class="cm">/* returns 0 */</span>
+<span class="cm">/* the number of elements is now in count */</span>
+</pre></div>
+</div>
+<p>The second strategy is to iterate through the elements yourself.</p>
+<dl class="macro">
+<dt id="c.cork_dllist_foreach">
+<code class="descname">cork_dllist_foreach</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;&amp;*curr</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;&amp;*next</em>, TYPE<em>&nbsp;element_type</em>, TYPE<em>&nbsp;&amp;*element</em>, FIELD<em>&nbsp;item_field</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_foreach" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_foreach_void">
+<code class="descname">cork_dllist_foreach_void</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;&amp;*curr</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;&amp;*next</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_foreach_void" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through each element in <em>list</em>, executing a statement for each one.
+You must declare two variables of type <code class="docutils literal"><span class="pre">struct</span> <span class="pre">cork_dllist_item</span> <span class="pre">*</span></code>, and
+pass in their names as <em>curr</em> and <em>next</em>.  (You’ll usually call the variables
+<code class="docutils literal"><span class="pre">curr</span></code> and <code class="docutils literal"><span class="pre">next</span></code>, too.)</p>
+<p>For the <code class="docutils literal"><span class="pre">_void</span></code> variant, your statement can only use these
+<a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a> variables to access the current list element.  You
+can use <a class="reference internal" href="basic-types.html#c.cork_container_of" title="cork_container_of"><code class="xref c c-func docutils literal"><span class="pre">cork_container_of()</span></code></a> to get a pointer to the actual element
+type.</p>
+<p>For the non-<code class="docutils literal"><span class="pre">_void</span></code> variant, we’ll automatically call
+<a class="reference internal" href="basic-types.html#c.cork_container_of" title="cork_container_of"><code class="xref c c-func docutils literal"><span class="pre">cork_container_of()</span></code></a> for you.  <em>element_type</em> should be the actual
+element type, which must contain an embedded <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-func docutils literal"><span class="pre">cork_dllist_item()</span></code></a>
+field.  <em>item_field</em> should be the name of this embedded field.  You must
+allocate a pointer to the element type, and pass in its name as <em>element</em>.</p>
+</dd></dl>
+
+<p>For instance, you can use these macros calculate the number of elements as
+follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">list</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">next</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">cork_dllist_foreach_void</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">curr</span><span class="p">,</span> <span class="n">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* the number of elements is now in count */</span>
+</pre></div>
+</div>
+<p>We’re able to use <a class="reference internal" href="#c.cork_dllist_foreach_void" title="cork_dllist_foreach_void"><code class="xref c c-macro docutils literal"><span class="pre">cork_dllist_foreach_void</span></code></a> since we don’t need to
+access the contents of each element to calculate how many of theo there are.  If
+we wanted to calculuate a sum, however, we’d have to use
+<a class="reference internal" href="#c.cork_dllist_foreach" title="cork_dllist_foreach"><code class="xref c c-macro docutils literal"><span class="pre">cork_dllist_foreach</span></code></a>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">element</span> <span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span>  <span class="n">value</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">cork_dllist_item</span>  <span class="n">item</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">list</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">next</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">element</span>  <span class="o">*</span><span class="n">element</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="kt">int</span>  <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">cork_dllist_foreach</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">curr</span><span class="p">,</span> <span class="n">next</span><span class="p">,</span> <span class="k">struct</span> <span class="n">element</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sum</span> <span class="o">+=</span> <span class="n">element</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* the sum of the elements is now in sum */</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal"><span class="pre">foreach</span></code> macros don’t provide what you need, you can also iterate
+through the list manually.</p>
+<dl class="function">
+<dt id="c.cork_dllist_head">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">cork_dllist_head</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_head" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_start">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">cork_dllist_start</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the element at the beginning of <em>list</em>.  If <em>list</em> is empty,
+then the <code class="docutils literal"><span class="pre">_head</span></code> variant will return <code class="docutils literal"><span class="pre">NULL</span></code>, while the <code class="docutils literal"><span class="pre">_start</span></code>
+variant will return the list’s sentinel element.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_tail">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">cork_dllist_tail</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_tail" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_end">
+struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a> *<code class="descname">cork_dllist_end</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the element at the end of <em>list</em>.  If <em>list</em> is empty, then
+the <code class="docutils literal"><span class="pre">_tail</span></code> variant will return <code class="docutils literal"><span class="pre">NULL</span></code>, while the <code class="docutils literal"><span class="pre">_end</span></code>
+variant will return the list’s sentinel element.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_dllist_is_start">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_dllist_is_start</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_is_start" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_dllist_is_end">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_dllist_is_end</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dllist" title="cork_dllist">cork_dllist</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_dllist_item" title="cork_dllist_item">cork_dllist_item</a><em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dllist_is_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>element</em> marks the start (or end) of <em>list</em>.</p>
+</dd></dl>
+
+<p>With these functions, manually counting the list elements looks like:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">list</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist_item</span>  <span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">curr</span> <span class="o">=</span> <span class="n">cork_dllist_start</span><span class="p">(</span><span class="n">list</span><span class="p">);</span> <span class="o">!</span><span class="n">cork_dllist_is_end</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">curr</span><span class="p">);</span>
+     <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* the number of elements is now in count */</span>
+</pre></div>
+</div>
+<p>You can also count the elements in reverse order:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">cork_dllist</span>  <span class="o">*</span><span class="n">list</span> <span class="o">=</span> <span class="cm">/* from somewhere */</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">cork_dllist_item</span>  <span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+<span class="kt">size_t</span>  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">curr</span> <span class="o">=</span> <span class="n">cork_dllist_end</span><span class="p">(</span><span class="n">list</span><span class="p">);</span> <span class="o">!</span><span class="n">cork_dllist_is_start</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">curr</span><span class="p">);</span>
+     <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">-&gt;</span><span class="n">prev</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/* the number of elements is now in count */</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Doubly-linked lists</a><ul>
+<li><a class="reference internal" href="#querying-a-list">Querying a list</a></li>
+<li><a class="reference internal" href="#editing-a-list">Editing a list</a></li>
+<li><a class="reference internal" href="#iterating-through-a-list">Iterating through a list</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="stream.html"
+                        title="previous chapter">Stream processing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hash-table.html"
+                        title="next chapter">Hash tables</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dllist.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="hash-table.html" title="Hash tables"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="stream.html" title="Stream processing"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

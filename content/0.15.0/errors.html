@@ -1,0 +1,645 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Error reporting &#8212; libcork 0.15.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.15.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference-counted garbage collection" href="gc.html" />
+    <link rel="prev" title="Memory allocation" href="allocation.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gc.html" title="Reference-counted garbage collection"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="allocation.html" title="Memory allocation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="error-reporting">
+<span id="errors"></span><h1>Error reporting<a class="headerlink" href="#error-reporting" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines an API for reporting error conditions.  It’s loosely
+modeled on the POSIX <code class="docutils literal"><span class="pre">errno</span></code> mechanism.</p>
+<p>The standard POSIX approach for reporting errors is to return an integer status
+code, and to store error codes into the <code class="docutils literal"><span class="pre">errno</span></code> global variable.  This
+approach has a couple of drawbacks.  The first is that you — or really, your C
+library — has to ensure that <code class="docutils literal"><span class="pre">errno</span></code> is placed in thread-local storage, so
+that separate threads have their own error condition variables.  The second, and
+in our mind more important, is that the set of error codes is fixed and
+platform-dependent.  It’s difficult to add new error codes to represent
+application-level error conditions.</p>
+<p>The libcork error API is a way around this.  Like standard POSIX-conforming
+functions, you return an integer status code from any function that might need
+to report an error to its caller.  The status return code is simple: <code class="docutils literal"><span class="pre">0</span></code>
+indicates success, <code class="docutils literal"><span class="pre">-1</span></code> indicates failure.</p>
+<p>When an error occurs, you can use the functions in this section to get more
+information about the error: an <em>error code</em>, and human-readable string
+description of the error.  The POSIX <code class="docutils literal"><span class="pre">errno</span></code> values, while hard to extend, are
+perfectly well-defined for most platforms; therefore, any <code class="docutils literal"><span class="pre">errno</span></code> value
+supported by your system’s C library is a valid libcork error code.  To support
+new application-specific error codes, an error code can also be the hash of some
+string describing the error.  This “hash of a string” approach makes it easy to
+define new error codes without needing any centralized mechanism for assigning
+IDs to the various codes.  Moreover, it’s very unlikely that a hashed error code
+will conflict with some existing POSIX <code class="docutils literal"><span class="pre">errno</span></code> value, or with any other hashed
+error codes.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We correctly maintain a separate error condition for each thread in
+the current process.  This is all hidden by the functions in this
+section; it’s safe to call them from multiple threads simultaneously.</p>
+</div>
+<div class="section" id="calling-a-function-that-can-return-an-error">
+<h2>Calling a function that can return an error<a class="headerlink" href="#calling-a-function-that-can-return-an-error" title="Permalink to this headline">¶</a></h2>
+<p>There are two basic forms for a function that can produce an error.  The
+first is if the function returns a single pointer as its result:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">TYPE</span> <span class="o">*</span>
+<span class="nf">my_function</span><span class="p">(</span><span class="cm">/* parameters */</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The second is for any other function:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">my_function</span><span class="p">(</span><span class="cm">/* parameters */</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If an error occurs, the function will return either <code class="docutils literal"><span class="pre">NULL</span></code> or <code class="docutils literal"><span class="pre">-1</span></code>,
+depending on its return type.  Success will be indicated by a non-<code class="docutils literal"><span class="pre">NULL</span></code> pointer or a <code class="docutils literal"><span class="pre">0</span></code>.  (More complex return value schemes are
+possible, if the function needs to signal more than a simple “success”
+or “failure”; in that case, you’ll need to check the function’s
+documentation for details.)</p>
+<p>If you want to know specifics about the error, there are several
+functions that you can use to interrogate the current error condition.</p>
+<dl class="function">
+<dt id="c.cork_error_occurred">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_error_occurred</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_occurred" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether an error has occurred.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_error_code">
+<a class="reference internal" href="#c.cork_error" title="cork_error">cork_error</a> <code class="descname">cork_error_code</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the error code of the current error condition.  If no error has
+occurred, the result will be <a class="reference internal" href="#c.CORK_ERROR_NONE" title="CORK_ERROR_NONE"><code class="xref c c-macro docutils literal"><span class="pre">CORK_ERROR_NONE</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_error_message">
+const char *<code class="descname">cork_error_message</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the human-readable string description the current error
+condition.  If no error occurred, the result of this function is
+undefined.</p>
+</dd></dl>
+
+<p>You can use the <code class="docutils literal"><span class="pre">cork_error_prefix</span></code> family of functions to add additional
+context to the beginning of an error message.</p>
+<dl class="function">
+<dt id="c.cork_error_prefix_printf">
+void <code class="descname">cork_error_prefix_printf</code><span class="sig-paren">(</span>const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_prefix_printf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_error_prefix_string">
+void <code class="descname">cork_error_prefix_string</code><span class="sig-paren">(</span>const char<em>&nbsp;*string</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_prefix_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_error_prefix_vprintf">
+void <code class="descname">cork_error_prefix_vprintf</code><span class="sig-paren">(</span>const char<em>&nbsp;*format</em>, va_list<em>&nbsp;args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_prefix_vprintf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepends some additional text to the current error condition.</p>
+</dd></dl>
+
+<p>When you’re done checking the current error condition, you clear it so
+that later calls to <a class="reference internal" href="#c.cork_error_occurred" title="cork_error_occurred"><code class="xref c c-func docutils literal"><span class="pre">cork_error_occurred()</span></code></a> and friends don’t
+re-report this error.</p>
+<dl class="function">
+<dt id="c.cork_error_clear">
+void <code class="descname">cork_error_clear</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the current error condition.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="writing-a-function-that-can-return-an-error">
+<h2>Writing a function that can return an error<a class="headerlink" href="#writing-a-function-that-can-return-an-error" title="Permalink to this headline">¶</a></h2>
+<p>When writing a function that might produce an error condition, your
+function signature should follow one of the two standard patterns
+described above:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">my_function</span><span class="p">(</span><span class="cm">/* parameters */</span><span class="p">);</span>
+
+<span class="n">TYPE</span> <span class="o">*</span>
+<span class="nf">my_function</span><span class="p">(</span><span class="cm">/* parameters */</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>You should return <code class="docutils literal"><span class="pre">-1</span></code> or <code class="docutils literal"><span class="pre">NULL</span></code> if an error occurs, and <code class="docutils literal"><span class="pre">0</span></code> or a
+non-<code class="docutils literal"><span class="pre">NULL</span></code> pointer if it succeeds.  If <code class="docutils literal"><span class="pre">NULL</span></code> is a valid
+“successful” result of the function, you should use the first form, and
+define a <code class="docutils literal"><span class="pre">TYPE</span> <span class="pre">**</span></code> output parameter to return the actual pointer
+value.  (If you’re using the first form, you can use additional return
+codes if there are other possible results besides a simple “success” and
+“failure”.)</p>
+<p>If your function results in an error, you need to fill in the current
+error condition using the <code class="docutils literal"><span class="pre">cork_error_set</span></code> family of functions:</p>
+<dl class="function">
+<dt id="c.cork_error_set_printf">
+void <code class="descname">cork_error_set_printf</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_error" title="cork_error">cork_error</a><em>&nbsp;ecode</em>, const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_set_printf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_error_set_string">
+void <code class="descname">cork_error_set_string</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_error" title="cork_error">cork_error</a><em>&nbsp;ecode</em>, const char<em>&nbsp;*string</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_set_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_error_set_vprintf">
+void <code class="descname">cork_error_set_vprintf</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_error" title="cork_error">cork_error</a><em>&nbsp;ecode</em>, const char<em>&nbsp;*format</em>, va_list<em>&nbsp;args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_error_set_vprintf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills in the current error condition.  The error condition is defined
+by the error code <em>ecode</em>.  The human-readable description is constructed
+from <em>string</em>, or from <em>format</em> and any additional parameters, depending on
+which variant you use.</p>
+</dd></dl>
+
+<p>As an example, the <a class="reference internal" href="net-addresses.html#net-addresses"><span class="std std-ref">IP address</span></a> parsing functions fill in
+<a class="reference internal" href="#c.CORK_PARSE_ERROR" title="CORK_PARSE_ERROR"><code class="xref c c-macro docutils literal"><span class="pre">CORK_PARSE_ERROR</span></code></a> error conditions when you try to parse a malformed
+address:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="cm">/* the string that&#39;s being parsed */</span><span class="p">;</span>
+<span class="n">cork_error_set_printf</span>
+    <span class="p">(</span><span class="n">CORK_PARSE_ERROR</span><span class="p">,</span> <span class="s">&quot;Invalid IP address: %s&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If a particular kind of error can be raised in several places
+throughout your code, it can be useful to define a helper function for
+filling in the current error condition:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span>
+<span class="nf">cork_ip_address_parse_error</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">version</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_error_set_printf</span>
+        <span class="p">(</span><span class="n">CORK_PARSE_ERROR</span><span class="p">,</span> <span class="s">&quot;Invalid %s address: %s&quot;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="error-checking-macros">
+<h2>Error-checking macros<a class="headerlink" href="#error-checking-macros" title="Permalink to this headline">¶</a></h2>
+<p>There can be a lot of repetitive code when calling functions that return
+error conditions.  We provide a collection of helper macros that make it
+easier to write this code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Unlike most libcork modules, these macros are <strong>not</strong> automatically
+defined when you include the <code class="docutils literal"><span class="pre">libcork/core.h</span></code> header file, since
+they don’t include a <code class="docutils literal"><span class="pre">cork_</span></code> prefix.  Because of this, we don’t
+want to pollute your namespace unless you ask for the macros.  To do
+so, you must explicitly include their header file:</p>
+<div class="last highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/errors.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="additional-debugging-output">
+<h3>Additional debugging output<a class="headerlink" href="#additional-debugging-output" title="Permalink to this headline">¶</a></h3>
+<dl class="macro">
+<dt id="c.CORK_PRINT_ERRORS">
+<code class="descname">CORK_PRINT_ERRORS</code><a class="headerlink" href="#c.CORK_PRINT_ERRORS" title="Permalink to this definition">¶</a></dt>
+<dd><p>If you define this macro to <code class="docutils literal"><span class="pre">1</span></code> before including
+<code class="file docutils literal"><span class="pre">libcork/helpers/errors.h</span></code>, then we’ll output the current
+function name, file, and line number, along with the description of
+the error, to stderr whenever an error is detected by one of the
+macros described in this section.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="returning-a-default-error-code">
+<h3>Returning a default error code<a class="headerlink" href="#returning-a-default-error-code" title="Permalink to this headline">¶</a></h3>
+<p>If you follow one of the standard function signature patterns described
+above, then your function will either return an <code class="docutils literal"><span class="pre">int</span></code> or some pointer
+type, and errors will be signalled by a return value of <code class="docutils literal"><span class="pre">-1</span></code> or
+<code class="docutils literal"><span class="pre">NULL</span></code>.  If so, you can use the macros in this section to
+automatically return the appropriate error return value if a nested
+function call returns an error.</p>
+<p>With these macros, you won’t have a chance to inspect the error
+condition when an error occurs, so you should pass in your own <em>err</em>
+parameter when calling the nested function.</p>
+<p>(The mnemonic for remembering these macro names is that they all start
+with <code class="docutils literal"><span class="pre">rXY_</span></code>.  The <code class="docutils literal"><span class="pre">r</span></code> indicates that they automatically “return”.
+The second character indicates whether <em>your</em> function returns an
+<code class="docutils literal"><span class="pre">int</span></code> or a pointer.  The third character indicates whether the
+function you’re <em>calling</em> returns an <code class="docutils literal"><span class="pre">int</span></code> or a pointer.)</p>
+<dl class="function">
+<dt id="c.rie_check">
+void <code class="descname">rie_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rie_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function whose return value isn’t enough to check for an error, when
+your function returns an <code class="docutils literal"><span class="pre">int</span></code>.  We’ll use <a class="reference internal" href="#c.cork_error_occurred" title="cork_error_occurred"><code class="xref c c-func docutils literal"><span class="pre">cork_error_occurred()</span></code></a> to
+check for an error.  If the nested function call returns an error, we
+propagate that error on.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rii_check">
+void <code class="descname">rii_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rii_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator, when your
+function also returns an <code class="docutils literal"><span class="pre">int</span></code>.  If the nested function call
+returns an error, we propagate that error on.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rip_check">
+void <code class="descname">rip_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rip_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer, when your function returns an
+<code class="docutils literal"><span class="pre">int</span></code>.  If the nested function call returns an error, we propagate
+that error on.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rpe_check">
+void <code class="descname">rpe_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rpe_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function whose return value isn’t enough to check for an error, when
+your function returns a pointer.  We’ll use <a class="reference internal" href="#c.cork_error_occurred" title="cork_error_occurred"><code class="xref c c-func docutils literal"><span class="pre">cork_error_occurred()</span></code></a> to
+check for an error.  If the nested function call returns an error, we
+propagate that error on.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rpi_check">
+void <code class="descname">rpi_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rpi_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator, when your
+function returns a pointer.  If the nested function call returns an
+error, we propagate that error on.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rpp_check">
+void <code class="descname">rpp_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rpp_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer, when your function also
+returns a pointer.  If the nested function call returns an error, we
+propagate that error on.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="returning-a-non-standard-return-value">
+<h3>Returning a non-standard return value<a class="headerlink" href="#returning-a-non-standard-return-value" title="Permalink to this headline">¶</a></h3>
+<p>If your function doesn’t have a standard signature, or it uses
+additional return values besides <code class="docutils literal"><span class="pre">0</span></code>, <code class="docutils literal"><span class="pre">1</span></code>, <code class="docutils literal"><span class="pre">NULL</span></code>, and valid
+pointers, then you can use the macros in this section to return a custom
+return value in case of an error.</p>
+<p>With these macros, you won’t have a chance to inspect the error
+condition when an error occurs, so you should pass in your own <em>err</em>
+parameter when calling the nested function.</p>
+<p>(The mnemonic for remembering these macro names is that they all start
+with <code class="docutils literal"><span class="pre">xY_</span></code>.  The <code class="docutils literal"><span class="pre">x</span></code> doesn’t standard for anything in particular.
+The second character indicates whether the function you’re <em>calling</em>
+returns an <code class="docutils literal"><span class="pre">int</span></code> or a pointer.  We don’t need separate macros for
+<em>your</em> function’s return type, since you provide a return value
+explicitly.)</p>
+<dl class="function">
+<dt id="c.xe_check">
+void <code class="descname">xe_check</code><span class="sig-paren">(</span>retval, call<span class="sig-paren">)</span><a class="headerlink" href="#c.xe_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function whose return value isn’t enough to check for an error.  If
+the nested function call raises an error, we propagate that error on, and
+return <em>retval</em> from the current function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.xi_check">
+void <code class="descname">xi_check</code><span class="sig-paren">(</span>retval, call<span class="sig-paren">)</span><a class="headerlink" href="#c.xi_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator.  If the
+nested function call raises an error, we propagate that error on, and
+return <em>retval</em> from the current function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.xp_check">
+void <code class="descname">xp_check</code><span class="sig-paren">(</span>retval, call<span class="sig-paren">)</span><a class="headerlink" href="#c.xp_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer.  If the nested function call
+raises an error, we propagate that error on, and return <em>retval</em> from
+the current function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="post-processing-when-an-error-occurs">
+<h3>Post-processing when an error occurs<a class="headerlink" href="#post-processing-when-an-error-occurs" title="Permalink to this headline">¶</a></h3>
+<p>If you need to perform some post-processing when a nested function
+returns an error, you can use the functions in this section.  They will
+automatically jump to the current scope’s <code class="docutils literal"><span class="pre">error</span></code> label whenever an
+error occurs.</p>
+<p>(The mnemonic for remembering these macro names is that they all start
+with <code class="docutils literal"><span class="pre">eY_</span></code>.  The <code class="docutils literal"><span class="pre">e</span></code> indicates that they’ll jump to the <code class="docutils literal"><span class="pre">error</span></code>
+label.  The second character indicates whether the function you’re
+<em>calling</em> returns an <code class="docutils literal"><span class="pre">int</span></code> or a pointer.  We don’t need separate
+macros for <em>your</em> function’s return type, since the macros won’t
+automatically return anything.)</p>
+<dl class="function">
+<dt id="c.ei_check">
+void <code class="descname">ei_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.ei_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function whose return value isn’t enough to check for an error.  If
+the nested function call raises an error, we automatically jump to the
+current scope’s <code class="docutils literal"><span class="pre">error</span></code> label.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+void <code class="descname">ei_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator.  If the
+nested function call raises an error, we automatically jump to the
+current scope’s <code class="docutils literal"><span class="pre">error</span></code> label.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ep_check">
+void <code class="descname">ep_check</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.ep_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer.  If the nested function call
+raises an error, we automatically jump to the current scope’s
+<code class="docutils literal"><span class="pre">error</span></code> label.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="calling-posix-functions">
+<h3>Calling POSIX functions<a class="headerlink" href="#calling-posix-functions" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="#c.cork_system_error_set" title="cork_system_error_set"><code class="xref c c-func docutils literal"><span class="pre">cork_system_error_set()</span></code></a> function automatically translates a POSIX
+error (specified in the standard <code class="docutils literal"><span class="pre">errno</span></code> variable) into a libcork error
+condition (which will be reported by <a class="reference internal" href="#c.cork_error_occurred" title="cork_error_occurred"><code class="xref c c-func docutils literal"><span class="pre">cork_error_occurred()</span></code></a> and friends).
+We also define several helper macros for calling a POSIX function and
+automatically checking its result.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/posix.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For all of these macros, the <code class="docutils literal"><span class="pre">EINTR</span></code> POSIX error is handled specially.
+This error indicates that a system call was interrupted by a signal, and that
+the call should be retried.  The macros do not translate <code class="docutils literal"><span class="pre">EINTR</span></code> errors
+into libcork errors; instead, they will retry the <code class="docutils literal"><span class="pre">call</span></code> until the
+statement succeeds or returns a non-<code class="docutils literal"><span class="pre">EINTR</span></code> error.</p>
+</div>
+<dl class="function">
+<dt id="c.rii_check_posix">
+void <code class="descname">rii_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rii_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator, when your function
+also returns an <code class="docutils literal"><span class="pre">int</span></code>.  If the nested function call returns a POSIX error,
+we translate it into a libcork error and return a libcork error code.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rip_check_posix">
+void <code class="descname">rip_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rip_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer, when your function returns an
+<code class="docutils literal"><span class="pre">int</span></code>.  If the nested function call returns a POSIX error, we translate it
+into a libcork error and return a libcork error code.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rpi_check_posix">
+void <code class="descname">rpi_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rpi_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator, when your function
+returns a pointer.  If the nested function call returns a POSIX error, we
+translate it into a libcork error and return a libcork error code.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.rpp_check_posix">
+void <code class="descname">rpp_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.rpp_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer, when your function also returns a
+pointer.  If the nested function call returns a POSIX error, we translate it
+into a libcork error and return a libcork error code.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ei_check_posix">
+void <code class="descname">ei_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.ei_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns an <code class="docutils literal"><span class="pre">int</span></code> error indicator.  If the nested
+function call raises a POSIX error, we translate it into a libcork error and
+automatically jump to the current scope’s <code class="docutils literal"><span class="pre">error</span></code> label.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ep_check_posix">
+void <code class="descname">ep_check_posix</code><span class="sig-paren">(</span>call<span class="sig-paren">)</span><a class="headerlink" href="#c.ep_check_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function that returns a pointer.  If the nested function call raises a
+POSIX error, we translate it into a libcork error and automatically jump to
+the current scope’s <code class="docutils literal"><span class="pre">error</span></code> label.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="defining-new-error-codes">
+<h2>Defining new error codes<a class="headerlink" href="#defining-new-error-codes" title="Permalink to this headline">¶</a></h2>
+<p>If none of the built-in error codes suffice for an error condition that you need
+to report, you’ll have to define our own.  As mentioned above, each libcork
+error code is either a predefined POSIX <code class="docutils literal"><span class="pre">errno</span></code> value, or a hash some of
+string identifying a custom error condition.</p>
+<p>Typically, you will create a macro in one of your public header files, whose
+value will be your new custom error code.  If this is the case, you can use the
+macro name itself to create the hash value for the error code.  This is what we
+do for the non-POSIX builtin errors; for instance, the value of the
+<a class="reference internal" href="#c.CORK_PARSE_ERROR" title="CORK_PARSE_ERROR"><code class="xref c c-macro docutils literal"><span class="pre">CORK_PARSE_ERROR</span></code></a> error code macro is the hash of the string
+<code class="docutils literal"><span class="pre">CORK_PARSE_ERROR</span></code>.</p>
+<p>Given this string, you can produce the error code’s hash value using the
+<a class="reference internal" href="hash-values.html#cork-hash"><span class="std std-ref">cork-hash</span></a> command that’s installed with libcork:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span>$ cork-hash CORK_PARSE_ERROR
+0x95dfd3c8
+</pre></div>
+</div>
+<p>It’s incredibly unlikely that the hash value for your new error code will
+conflict with any other custom hash-based error codes, or with any predefined
+POSIX <code class="docutils literal"><span class="pre">errno</span></code> values.</p>
+<p>With your macro name and hash value ready, defining the new error code is
+simple:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#define CORK_PARSE_ERROR  0x95dfd3c8</span>
+</pre></div>
+</div>
+<p>You should also provide a helper macro that makes it easier to report new
+instances of this error condition:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#define cork_parse_error(...) \</span>
+<span class="cp">    cork_error_set_printf(CORK_PARSE_ERROR, __VA_ARGS__)</span>
+</pre></div>
+</div>
+<dl class="type">
+<dt id="c.cork_error">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a>  <code class="descname">cork_error</code><a class="headerlink" href="#c.cork_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>An identifier for a particular error condition.  This will either be a
+predefined POSIX <code class="docutils literal"><span class="pre">errno</span></code> value, or the hash of a unique string describing
+the error condition.</p>
+</dd></dl>
+
+<p>With your error class and code defined, you can fill in error instances
+using <a class="reference internal" href="#c.cork_error_set_printf" title="cork_error_set_printf"><code class="xref c c-func docutils literal"><span class="pre">cork_error_set_printf()</span></code></a> and friends.</p>
+</div>
+<div class="section" id="builtin-errors">
+<h2>Builtin errors<a class="headerlink" href="#builtin-errors" title="Permalink to this headline">¶</a></h2>
+<p>In addition to all of the predefined POSIX <code class="docutils literal"><span class="pre">errno</span></code> values, we also provide
+error codes for a handful of common error conditions.  You should feel free to
+use these in your libraries and applications, instead of creating custom error
+codes, if they apply.</p>
+<dl class="macro">
+<dt id="c.CORK_ERROR_NONE">
+<code class="descname">CORK_ERROR_NONE</code><a class="headerlink" href="#c.CORK_ERROR_NONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>A special error code that signals that no error occurred.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_PARSE_ERROR">
+<code class="descname">CORK_PARSE_ERROR</code><a class="headerlink" href="#c.CORK_PARSE_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd><p>The provided input violates the rules of the language grammar or file format
+(or anything else, really) that you’re trying to parse.</p>
+<dl class="function">
+<dt id="c.cork_parse_error">
+void <code class="descname">cork_parse_error</code><span class="sig-paren">(</span>const char<em>&nbsp;*format*</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_parse_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_REDEFINED">
+<code class="descname">CORK_REDEFINED</code><a class="headerlink" href="#c.CORK_REDEFINED" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UNDEFINED">
+<code class="descname">CORK_UNDEFINED</code><a class="headerlink" href="#c.CORK_UNDEFINED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Useful when you have a container type that must ensure that there is only one
+entry for any given key.</p>
+<dl class="function">
+<dt id="c.cork_redefined">
+void <code class="descname">cork_redefined</code><span class="sig-paren">(</span>const char<em>&nbsp;*format*</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_redefined" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_undefined">
+void <code class="descname">cork_undefined</code><span class="sig-paren">(</span>const char<em>&nbsp;*format*</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_undefined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_UNKNOWN_ERROR">
+<code class="descname">CORK_UNKNOWN_ERROR</code><a class="headerlink" href="#c.CORK_UNKNOWN_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some error occurred, but we don’t have any other information about the error.</p>
+<dl class="function">
+<dt id="c.cork_unknown_error">
+void <code class="descname">cork_unknown_error</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_unknown_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>The error description will include the name of the current function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>We also provide some helper functions for setting these built-in errors:</p>
+<dl class="function">
+<dt id="c.cork_system_error_set">
+void <code class="descname">cork_system_error_set</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_system_error_set" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_system_error_set_explicit">
+void <code class="descname">cork_system_error_set_explicit</code><span class="sig-paren">(</span>int<em>&nbsp;err</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_system_error_set_explicit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills in the current libcork error condition with information from a POSIX
+<code class="docutils literal"><span class="pre">errno</span></code> value.  The human-readable description of the error will be
+obtained from the standard <code class="docutils literal"><span class="pre">strerror</span></code> function.  With the <code class="docutils literal"><span class="pre">_explicit</span></code>
+variant, you provide the <code class="docutils literal"><span class="pre">errno</span></code> value directly; for the other variant, we
+get the error code from the C library’s <code class="docutils literal"><span class="pre">errno</span></code> variable.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_abort">
+void <code class="descname">cork_abort</code><span class="sig-paren">(</span>const char<em>&nbsp;*fmt</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_abort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aborts the current program with an error message given by <em>fmt</em> and any
+additional parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_unreachable">
+void <code class="descname">cork_unreachable</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_unreachable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aborts the current program with a message indicating that the code path
+should be unreachable.  This can be useful in the <code class="docutils literal"><span class="pre">default</span></code> clause of a
+<code class="docutils literal"><span class="pre">switch</span></code> statement if you can ensure that one of the non-<code class="docutils literal"><span class="pre">default</span></code>
+branches will always be selected.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Error reporting</a><ul>
+<li><a class="reference internal" href="#calling-a-function-that-can-return-an-error">Calling a function that can return an error</a></li>
+<li><a class="reference internal" href="#writing-a-function-that-can-return-an-error">Writing a function that can return an error</a></li>
+<li><a class="reference internal" href="#error-checking-macros">Error-checking macros</a><ul>
+<li><a class="reference internal" href="#additional-debugging-output">Additional debugging output</a></li>
+<li><a class="reference internal" href="#returning-a-default-error-code">Returning a default error code</a></li>
+<li><a class="reference internal" href="#returning-a-non-standard-return-value">Returning a non-standard return value</a></li>
+<li><a class="reference internal" href="#post-processing-when-an-error-occurs">Post-processing when an error occurs</a></li>
+<li><a class="reference internal" href="#calling-posix-functions">Calling POSIX functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#defining-new-error-codes">Defining new error codes</a></li>
+<li><a class="reference internal" href="#builtin-errors">Builtin errors</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="allocation.html"
+                        title="previous chapter">Memory allocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gc.html"
+                        title="next chapter">Reference-counted garbage collection</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/errors.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gc.html" title="Reference-counted garbage collection"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="allocation.html" title="Memory allocation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

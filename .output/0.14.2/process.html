@@ -1,0 +1,329 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Processes &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Subprocesses" href="subprocess.html" />
+    <link rel="prev" title="Files and directories" href="files.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="subprocess.html" title="Subprocesses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="files.html" title="Files and directories"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="processes">
+<span id="id1"></span><h1>Processes<a class="headerlink" href="#processes" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/os.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section let you interact with the current running process.</p>
+<div class="section" id="cleanup-functions">
+<h2>Cleanup functions<a class="headerlink" href="#cleanup-functions" title="Permalink to this headline">¶</a></h2>
+<p>Often you will need to perform some cleanup tasks whenever the current process
+terminates normally.  The functions in this section let you do that.</p>
+<dl class="function">
+<dt id="c.cork_cleanup_at_exit">
+void <code class="descname">cork_cleanup_at_exit</code><span class="sig-paren">(</span>int<em>&nbsp;priority</em>, <a class="reference internal" href="#c.cork_cleanup_function" title="cork_cleanup_function">cork_cleanup_function</a><em>&nbsp;function</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_cleanup_at_exit" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_cleanup_at_exit_named">
+void <code class="descname">cork_cleanup_at_exit_named</code><span class="sig-paren">(</span>const char<em>&nbsp;*name</em>, int<em>&nbsp;priority</em>, <a class="reference internal" href="#c.cork_cleanup_function" title="cork_cleanup_function">cork_cleanup_function</a><em>&nbsp;function</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_cleanup_at_exit_named" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a <em>function</em> that should be called when the current process
+terminates.  When multiple functions are registered, the order in which they
+are called is determined by their <em>priority</em> values — functions with lower
+priorities will be called first.  If any functions have the same priority
+value, there is no guarantee about the order in which they will be called.</p>
+<p>All cleanup functions must conform to the following signature:</p>
+<dl class="type">
+<dt id="c.cork_cleanup_function">
+void <code class="descname">(*cork_cleanup_function)</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_cleanup_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The <code class="docutils literal"><span class="pre">_named</span></code> variant lets you provide an explicit name for the cleanup
+function, which currently is only used when printing out debug messages.  The
+plain variant automatically detects the name of <em>function</em>, so that you don’t
+have to provide it explicitly.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="environment-variables">
+<span id="env"></span><h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_env">
+struct <code class="descname">cork_env</code><a class="headerlink" href="#c.cork_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of environment variables that can be passed to subprocesses.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_new">
+struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a> *<code class="descname">cork_env_new</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new, empty collection of environment variables.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_clone_current">
+struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a> *<code class="descname">cork_env_clone_current</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_clone_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#c.cork_env" title="cork_env"><code class="xref c c-type docutils literal"><span class="pre">cork_env</span></code></a> containing all of the environment variables
+in the current process’s environment list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_free">
+void <code class="descname">cork_env_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a collection of environment variables.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_get">
+const char *<code class="descname">cork_env_get</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em>, const char<em>&nbsp;*name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the environment variable with the given <em>name</em>.  If there
+is no variable with that name, return <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+<p>If <em>env</em> is <code class="docutils literal"><span class="pre">NULL</span></code>, then the variable is retrieved from the current process
+environment; otherwise, it is retrieved from <em>env</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_add">
+void <code class="descname">cork_env_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em>, const char<em>&nbsp;*name</em>, const char<em>&nbsp;*value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_env_add_printf">
+void <code class="descname">cork_env_add_printf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em>, const char<em>&nbsp;*name</em>, const char<em>&nbsp;*format</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_add_printf" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_env_add_vprintf">
+void <code class="descname">cork_env_add_vprintf</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em>, const char<em>&nbsp;*name</em>, const char<em>&nbsp;*format</em>, va_list<em>&nbsp;args</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_add_vprintf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new environment variable with the given <em>name</em> and <em>value</em>.  If there
+is already a variable with that name, it is overwritten.  We make a copy of
+both <em>name</em> and <em>variable</em>, so it is safe to pass in temporary or reusable
+strings for either.  The <code class="docutils literal"><span class="pre">printf</span></code> and <code class="docutils literal"><span class="pre">vprintf</span></code> variants construct the
+new variable’s value from a <code class="docutils literal"><span class="pre">printf</span></code>-like format string.</p>
+<p>If <em>env</em> is <code class="docutils literal"><span class="pre">NULL</span></code>, then the new variable is added to the current process
+environment; otherwise, it is added to <em>env</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_remove">
+void <code class="descname">cork_env_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em>, const char<em>&nbsp;*name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the environment variable with the given <em>name</em>, if it exists.  If
+there isn’t any variable with that name, do nothing.</p>
+<p>If <em>env</em> is <code class="docutils literal"><span class="pre">NULL</span></code>, then the variable is removed from the current process
+environment; otherwise, it is removed from <em>env</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_env_replace_current">
+void <code class="descname">cork_env_replace_current</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_env_replace_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the current process’s environment list with the contents of <em>env</em>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="executing-another-program">
+<span id="exec"></span><h2>Executing another program<a class="headerlink" href="#executing-another-program" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_exec">
+struct <code class="descname">cork_exec</code><a class="headerlink" href="#c.cork_exec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A specification for executing another program.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_new">
+struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a> *<code class="descname">cork_exec_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*program</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_new" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_new_with_params">
+struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a> *<code class="descname">cork_exec_new_with_params</code><span class="sig-paren">(</span>const char<em>&nbsp;*program</em>, ...<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_new_with_params" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_new_with_param_array">
+struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a> *<code class="descname">cork_exec_new_with_param_array</code><span class="sig-paren">(</span>const char<em>&nbsp;*program</em>, char * const<em>&nbsp;*params</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_new_with_param_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new specification for executing <em>program</em>.  <em>program</em> must either be
+an absolute path to an executable on the local filesystem, or the name of an
+executable that should be found in the current <code class="docutils literal"><span class="pre">PATH</span></code>.</p>
+<p>The first variant creates a specification that initially doesn’t contain any
+parameters to pass into the new program.  The second variant allows you to
+pass in each argument as a separate parameter; you must ensure that you
+terminate the list of parameters with a <code class="docutils literal"><span class="pre">NULL</span></code> pointer.  The third variant
+allows you to pass in a <code class="docutils literal"><span class="pre">NULL</span></code>-terminated array of strings to use as an
+initial parameter list.  For all three variants, you can add additional
+parameters before executing the new program via the <code class="xref c c-func docutils literal"><span class="pre">cork_add_param()</span></code>
+function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Most programs will expect the first parameter to be the name of the
+program being executed.  The <a class="reference internal" href="#c.cork_exec_new_with_params" title="cork_exec_new_with_params"><code class="xref c c-func docutils literal"><span class="pre">cork_exec_new_with_params()</span></code></a> function
+will automatically fill in this first parameter for you.  The other
+constructor functions do not; when using them, it is your responsibility
+to provide this parameter, just like any other parameters to pass into the
+program.</p>
+</div>
+<p>This function does not actually execute the program; that is handled by the
+<a class="reference internal" href="#c.cork_exec_run" title="cork_exec_run"><code class="xref c c-func docutils literal"><span class="pre">cork_exec_run()</span></code></a> function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_free">
+void <code class="descname">cork_exec_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free an execution specification.  You normally won’t need to call this
+function; normally you’ll replace the current process with the new program
+(by calling <a class="reference internal" href="#c.cork_exec_run" title="cork_exec_run"><code class="xref c c-func docutils literal"><span class="pre">cork_exec_run()</span></code></a>), which means you won’t have a chance to
+free the specification object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_description">
+const char *<code class="descname">cork_exec_description</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string description of the program described by an execution
+specification.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_add_param">
+void <code class="descname">cork_exec_add_param</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em>, const char<em>&nbsp;*param</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_add_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a parameter to the parameter list that will be passed into the new
+program.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_set_env">
+void <code class="descname">cork_exec_set_env</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em>, struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a><em>&nbsp;*env</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_set_env" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide a set of environment variables that will be passed into the new
+program.  The subprocess’s environment will contain only those variables
+defined in <em>env</em>.  You can use the <a class="reference internal" href="#c.cork_env_clone_current" title="cork_env_clone_current"><code class="xref c c-func docutils literal"><span class="pre">cork_env_clone_current()</span></code></a> function
+to create a copy of the current process’s environment, to use it as a base to
+add new variables or remove unsafe variables.  We will take control of <em>env</em>,
+so you must <strong>not</strong> call <a class="reference internal" href="#c.cork_env_free" title="cork_env_free"><code class="xref c c-func docutils literal"><span class="pre">cork_env_free()</span></code></a> to free the environment
+yourself.</p>
+<p>If you don’t call this function for a specification object, the new
+program will use the same environment as the calling process.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_set_cwd">
+void <code class="descname">cork_exec_set_cwd</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em>, const char<em>&nbsp;directory</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_set_cwd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the working directory that the new program will be called from.  If
+you don’t call this function for a specification object, the new program will
+be executed in the same working directory as the calling process.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_program">
+const char *<code class="descname">cork_exec_program</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_program" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_param_count">
+size_t *<code class="descname">cork_exec_param_count</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_param_count" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_param">
+const char *<code class="descname">cork_exec_param</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_param" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_env">
+struct <a class="reference internal" href="#c.cork_env" title="cork_env">cork_env</a> *<code class="descname">cork_exec_env</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_env" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_exec_cwd">
+const char *<code class="descname">cork_exec_cwd</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_cwd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accessor functions that allow you to retrieve the contents of an execution
+specification.  The <a class="reference internal" href="#c.cork_exec_env" title="cork_exec_env"><code class="xref c c-func docutils literal"><span class="pre">cork_exec_env()</span></code></a> and <a class="reference internal" href="#c.cork_exec_cwd" title="cork_exec_cwd"><code class="xref c c-func docutils literal"><span class="pre">cork_exec_cwd()</span></code></a>
+functions might return <code class="docutils literal"><span class="pre">NULL</span></code>, if there isn’t an environment or working
+directory specified.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_exec_run">
+int <code class="descname">cork_exec_run</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_exec" title="cork_exec">cork_exec</a><em>&nbsp;*exec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_exec_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the program specified by <em>exec</em>, replacing the current process.
+If we can successfully start the new program, this function will not return.
+If there are any errors starting the program, this function will return an
+error condition.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Processes</a><ul>
+<li><a class="reference internal" href="#cleanup-functions">Cleanup functions</a></li>
+<li><a class="reference internal" href="#environment-variables">Environment variables</a></li>
+<li><a class="reference internal" href="#executing-another-program">Executing another program</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="files.html"
+                        title="previous chapter">Files and directories</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="subprocess.html"
+                        title="next chapter">Subprocesses</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/process.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="subprocess.html" title="Subprocesses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="files.html" title="Files and directories"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

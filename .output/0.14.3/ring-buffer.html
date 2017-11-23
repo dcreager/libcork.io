@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Ring buffers &#8212; libcork 0.14.3 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command-line programs" href="cli.html" />
+    <link rel="prev" title="Hash tables" href="hash-table.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cli.html" title="Command-line programs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hash-table.html" title="Hash tables"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ring-buffers">
+<span id="ring-buffer"></span><h1>Ring buffers<a class="headerlink" href="#ring-buffers" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<dl class="type">
+<dt id="c.cork_ring_buffer">
+struct <code class="descname">cork_ring_buffer</code><a class="headerlink" href="#c.cork_ring_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ring buffer data structure that can be easily embedded into other
+types.  All of the fields in <code class="docutils literal"><span class="pre">cork_ring_buffer</span></code> are private; you
+should only access the contents of the ring buffer via the functions
+defined below.</p>
+<p>The elements of a ring buffer are <code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code> pointers.  (You can also
+store integers via the <a class="reference internal" href="basic-types.html#c.intptr_t" title="intptr_t"><code class="xref c c-type docutils literal"><span class="pre">intptr_t</span></code></a> and <a class="reference internal" href="basic-types.html#c.uintptr_t" title="uintptr_t"><code class="xref c c-type docutils literal"><span class="pre">uintptr_t</span></code></a>
+types.)  Ring buffers have a fixed capacity, which must be specified
+when the ring buffer instance is initialized.  You cannot add extra
+space to an existing ring buffer.</p>
+<p>Ring buffers implement a FIFO queue structure; elements will be
+returned by <a class="reference internal" href="#c.cork_ring_buffer_pop" title="cork_ring_buffer_pop"><code class="xref c c-func docutils literal"><span class="pre">cork_ring_buffer_pop()</span></code></a> in the same order that
+they’re added by <a class="reference internal" href="#c.cork_ring_buffer_add" title="cork_ring_buffer_add"><code class="xref c c-func docutils literal"><span class="pre">cork_ring_buffer_add()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ring_buffer_init">
+int <code class="descname">cork_ring_buffer_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ring_buffer_new">
+struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a> *<code class="descname">cork_ring_buffer_new</code><span class="sig-paren">(</span>size_t<em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a ring buffer instance, having a capacity of <em>size</em> elements.
+The <code class="docutils literal"><span class="pre">_init</span></code> version should be used to initialize an instance you
+allocated yourself on the stack.  The <code class="docutils literal"><span class="pre">_new</span></code> version will allocate an
+instance from the heap.  If memory allocation fails in either function,
+the program will abort with an error.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ring_buffer_done">
+void <code class="descname">cork_ring_buffer_done</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_done" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ring_buffer_free">
+void <code class="descname">cork_ring_buffer_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalizes a ring buffer instance.  The <code class="docutils literal"><span class="pre">_done</span></code> variant should be used to
+finalize an instance that you allocated yourself (i.e., on the stack).  The
+<code class="docutils literal"><span class="pre">_free</span></code> version should be used on instance allocated on the heap by using
+<a class="reference internal" href="hash-table.html#c.cork_hash_table_new" title="cork_hash_table_new"><code class="xref c c-func docutils literal"><span class="pre">cork_hash_table_new()</span></code></a>.  Nothing special is done to any
+remaining elements in the ring buffer; if they need to be finalized,
+you should do that yourself before calling this function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ring_buffer_is_empty">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ring_buffer_is_empty</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_is_empty" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ring_buffer_is_full">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ring_buffer_is_full</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_is_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the ring buffer is empty or full.  (You cannot add
+elements to a full ring buffer, and you cannot pop elemenst from an
+empty one.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ring_buffer_add">
+int <code class="descname">cork_ring_buffer_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em>, void<em>&nbsp;*element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds <em>element</em> to a ring buffer.  If the ring buffer is full, we
+return <code class="docutils literal"><span class="pre">-1</span></code>, and the ring buffer will be unchanged.  Otherwise we
+return <code class="docutils literal"><span class="pre">0</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ring_buffer_pop">
+void *<code class="descname">cork_ring_buffer_pop</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_pop" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ring_buffer_peek">
+void *<code class="descname">cork_ring_buffer_peek</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ring_buffer" title="cork_ring_buffer">cork_ring_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ring_buffer_peek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next element in the ring buffer.  If the ring buffer is
+empty, we return <code class="docutils literal"><span class="pre">NULL</span></code>.  The <code class="docutils literal"><span class="pre">_pop</span></code> variant will remove the
+returned element from the ring buffer before returning it; the
+<code class="docutils literal"><span class="pre">_peek</span></code> variant will leave the element in the ring buffer.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hash-table.html"
+                        title="previous chapter">Hash tables</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="cli.html"
+                        title="next chapter">Command-line programs</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ring-buffer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="cli.html" title="Command-line programs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hash-table.html" title="Hash tables"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

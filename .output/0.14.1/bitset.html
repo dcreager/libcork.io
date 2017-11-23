@@ -1,0 +1,167 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Bit sets &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Binary slices" href="slice.html" />
+    <link rel="prev" title="Resizable arrays" href="array.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="slice.html" title="Binary slices"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="array.html" title="Resizable arrays"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bit-sets">
+<span id="bits"></span><h1>Bit sets<a class="headerlink" href="#bit-sets" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This sections defines a type for storing an array of bits.  This data structure
+is most often used to implement a set of integers.  It is particularly good when
+you expect your sets to be <em>dense</em>.  You should not use a bitset if the number
+of possibly elements is outrageously large, however, since that would cause your
+bitset to exhaust the available memory.</p>
+<dl class="type">
+<dt id="c.cork_bitset">
+struct <code class="descname">cork_bitset</code><a class="headerlink" href="#c.cork_bitset" title="Permalink to this definition">¶</a></dt>
+<dd><p>An array of bits.  You should not allocate any instances of this type
+yourself; use <a class="reference internal" href="#c.cork_bitset_new" title="cork_bitset_new"><code class="xref c c-func docutils literal"><span class="pre">cork_bitset_new()</span></code></a> instead.</p>
+<dl class="member">
+<dt id="c.cork_bitset.bit_count">
+size_t <code class="descname">bit_count</code><a class="headerlink" href="#c.cork_bitset.bit_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of bits that are included in this array.  (Each bit can be on
+or off; this does not give you the number of bits that are <em>on</em>, it gives
+you the number of bits in total, on or off.)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_bitset_new">
+struct <a class="reference internal" href="#c.cork_bitset" title="cork_bitset">cork_bitset</a> *<code class="descname">cork_bitset_new</code><span class="sig-paren">(</span>size_t<em>&nbsp;bit_count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_bitset_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new bitset with enough space to store the given number of bits.  All
+bits will be initialized to <code class="docutils literal"><span class="pre">0</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_bitset_free">
+void <code class="descname">cork_bitset_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_bitset" title="cork_bitset">cork_bitset</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_bitset_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a bitset.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_bitset_get">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_bitset_get</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_bitset" title="cork_bitset">cork_bitset</a><em>&nbsp;*set</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_bitset_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether the given bit is on or off in <em>set</em>.  It is your
+responsibility to ensure that <em>index</em> is within the valid range for <em>set</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_bitset_set">
+void <code class="descname">cork_bitset_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_bitset" title="cork_bitset">cork_bitset</a><em>&nbsp;*set</em>, size_t<em>&nbsp;index</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_bitset_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn the given bit on or off in <em>set</em>.  It is your responsibility to ensure
+that <em>index</em> is within the valid range for <em>set</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_bitset_clear">
+void <code class="descname">cork_bitset_clear</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_bitset" title="cork_bitset">cork_bitset</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_bitset_clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn off of the bits in <em>set</em>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="array.html"
+                        title="previous chapter">Resizable arrays</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="slice.html"
+                        title="next chapter">Binary slices</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bitset.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="slice.html" title="Binary slices"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="array.html" title="Resizable arrays"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

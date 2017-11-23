@@ -1,0 +1,304 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Byte order &#8212; libcork 0.14.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Compiler attributes" href="attributes.html" />
+    <link rel="prev" title="Unique identifiers" href="unique-ids.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="attributes.html" title="Compiler attributes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="unique-ids.html" title="Unique identifiers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="byte-order">
+<span id="id1"></span><h1>Byte order<a class="headerlink" href="#byte-order" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section contains definitions for determining the endianness of the
+host system, and for byte-swapping integer values of various sizes.</p>
+<div class="section" id="endianness-detection">
+<h2>Endianness detection<a class="headerlink" href="#endianness-detection" title="Permalink to this headline">¶</a></h2>
+<dl class="macro">
+<dt id="c.CORK_LITTLE_ENDIAN">
+<code class="descname">CORK_LITTLE_ENDIAN</code><a class="headerlink" href="#c.CORK_LITTLE_ENDIAN" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_BIG_ENDIAN">
+<code class="descname">CORK_BIG_ENDIAN</code><a class="headerlink" href="#c.CORK_BIG_ENDIAN" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_HOST_ENDIANNESS">
+<code class="descname">CORK_HOST_ENDIANNESS</code><a class="headerlink" href="#c.CORK_HOST_ENDIANNESS" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_OTHER_ENDIANNESS">
+<code class="descname">CORK_OTHER_ENDIANNESS</code><a class="headerlink" href="#c.CORK_OTHER_ENDIANNESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal"><span class="pre">CORK_HOST_ENDIANNESS</span></code> macro can be used to determine the
+endianness of the host system.  It will be equal to either
+<code class="docutils literal"><span class="pre">CORK_LITTLE_ENDIAN</span></code> or <code class="docutils literal"><span class="pre">CORK_BIG_ENDIAN</span></code>.  (The actual values
+don’t matter; you should always compare against the predefined
+constants.)  The <code class="docutils literal"><span class="pre">CORK_OTHER_endianness</span></code> macro is defined to be the
+opposite endianness as <code class="docutils literal"><span class="pre">CORK_HOST_ENDIANNESS</span></code>.  A common use case
+would be something like:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#if CORK_HOST_endianness == CORK_LITTLE_ENDIAN</span>
+<span class="cm">/* do something to little-endian values */</span>
+<span class="cp">#else</span>
+<span class="cm">/* do something to big-endian values */</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_HOST_ENDIANNESS_NAME">
+<code class="descname">CORK_HOST_ENDIANNESS_NAME</code><a class="headerlink" href="#c.CORK_HOST_ENDIANNESS_NAME" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_OTHER_ENDIANNESS_NAME">
+<code class="descname">CORK_OTHER_ENDIANNESS_NAME</code><a class="headerlink" href="#c.CORK_OTHER_ENDIANNESS_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>These macros give you a human-readable name of the host’s endianness.
+You can use this in debugging messages.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should <em>not</em> use these macros to detect the
+endianness of the system, since we might change their definitions
+at some point to support localization.  For that,
+use <a class="reference internal" href="#c.CORK_LITTLE_ENDIAN" title="CORK_LITTLE_ENDIAN"><code class="xref c c-macro docutils literal"><span class="pre">CORK_LITTLE_ENDIAN</span></code></a> and <a class="reference internal" href="#c.CORK_BIG_ENDIAN" title="CORK_BIG_ENDIAN"><code class="xref c c-macro docutils literal"><span class="pre">CORK_BIG_ENDIAN</span></code></a>.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="byte-swapping">
+<h2>Byte swapping<a class="headerlink" href="#byte-swapping" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="swapping-arbitrary-expressions">
+<h3>Swapping arbitrary expressions<a class="headerlink" href="#swapping-arbitrary-expressions" title="Permalink to this headline">¶</a></h3>
+<p>All of the macros in this section take in an rvalue (i.e., any arbitrary
+expression) as a parameter.  The result of the swap is returned as the
+value of the macro.</p>
+<dl class="function">
+<dt id="c.CORK_SWAP_UINT16">
+<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">CORK_SWAP_UINT16</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT16" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SWAP_UINT32">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">CORK_SWAP_UINT32</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT32" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SWAP_UINT64">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">CORK_SWAP_UINT64</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT64" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions always perform a byte-swap, regardless of the
+endianness of the host system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_BIG_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">CORK_UINT16_BIG_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_BIG_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_BIG_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">CORK_UINT32_BIG_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_BIG_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_BIG_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">CORK_UINT64_BIG_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_BIG_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a big-endian (or network-endian) value into
+host endianness.  (I.e., they only perform a swap if the current host
+is little-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_HOST_TO_BIG">
+<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">CORK_UINT16_HOST_TO_BIG</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_HOST_TO_BIG" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_HOST_TO_BIG">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">CORK_UINT32_HOST_TO_BIG</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_HOST_TO_BIG" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_HOST_TO_BIG">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">CORK_UINT64_HOST_TO_BIG</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_HOST_TO_BIG" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a host-endian value into big (or network)
+endianness.  (I.e., they only perform a swap if the current host is
+little-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_LITTLE_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">CORK_UINT16_LITTLE_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_LITTLE_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_LITTLE_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">CORK_UINT32_LITTLE_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_LITTLE_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_LITTLE_TO_HOST">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">CORK_UINT64_LITTLE_TO_HOST</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_LITTLE_TO_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a little-endian value into host endianness.
+(I.e., they only perform a swap if the current host is big-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_HOST_TO_LITTLE">
+<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">CORK_UINT16_HOST_TO_LITTLE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_HOST_TO_LITTLE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_HOST_TO_LITTLE">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">CORK_UINT32_HOST_TO_LITTLE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_HOST_TO_LITTLE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_HOST_TO_LITTLE">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">CORK_UINT64_HOST_TO_LITTLE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_HOST_TO_LITTLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a host-endian value into little endianness.
+(I.e., they only perform a swap if the current host is big-endian.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="swapping-values-in-place">
+<h3>Swapping values in place<a class="headerlink" href="#swapping-values-in-place" title="Permalink to this headline">¶</a></h3>
+<p>The macros in this section swap an integer <em>in place</em>, which means that
+the original value is overwritten with the result of the swap.  To
+support this, you must pass in an <em>lvalue</em> as the parameter to the
+macro.  (Note that you don’t pass in a <em>pointer</em> to the original value;
+these operations are implemented as macros, and you just need to provide
+a reference to the variable to be swapped.)</p>
+<dl class="function">
+<dt id="c.CORK_SWAP_UINT16_IN_PLACE">
+void <code class="descname">CORK_SWAP_UINT16_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT16_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SWAP_UINT32_IN_PLACE">
+void <code class="descname">CORK_SWAP_UINT32_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT32_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SWAP_UINT64_IN_PLACE">
+void <code class="descname">CORK_SWAP_UINT64_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_SWAP_UINT64_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions always perform a byte-swap, regardless of the
+endianness of the host system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_BIG_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT16_BIG_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_BIG_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_BIG_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT32_BIG_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_BIG_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_BIG_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT64_BIG_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_BIG_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a big-endian (or network-endian) value into
+host endianness, and vice versa.  (I.e., they only perform a swap if
+the current host is little-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_HOST_TO_BIG_IN_PLACE">
+void <code class="descname">CORK_UINT16_HOST_TO_BIG_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_HOST_TO_BIG_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_HOST_TO_BIG_IN_PLACE">
+void <code class="descname">CORK_UINT32_HOST_TO_BIG_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_HOST_TO_BIG_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_HOST_TO_BIG_IN_PLACE">
+void <code class="descname">CORK_UINT64_HOST_TO_BIG_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_HOST_TO_BIG_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a host-endian value into big (or network)
+endianness.  (I.e., they only perform a swap if the current host is
+little-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_LITTLE_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT16_LITTLE_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_LITTLE_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_LITTLE_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT32_LITTLE_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_LITTLE_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_LITTLE_TO_HOST_IN_PLACE">
+void <code class="descname">CORK_UINT64_LITTLE_TO_HOST_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_LITTLE_TO_HOST_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a little-endian value into host endianness, and
+vice versa.  (I.e., they only perform a swap if the current host is
+big-endian.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.CORK_UINT16_HOST_TO_LITTLE_IN_PLACE">
+void <code class="descname">CORK_UINT16_HOST_TO_LITTLE_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT16_HOST_TO_LITTLE_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT32_HOST_TO_LITTLE_IN_PLACE">
+void <code class="descname">CORK_UINT32_HOST_TO_LITTLE_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT32_HOST_TO_LITTLE_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_UINT64_HOST_TO_LITTLE_IN_PLACE">
+void <code class="descname">CORK_UINT64_HOST_TO_LITTLE_IN_PLACE</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;&amp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.CORK_UINT64_HOST_TO_LITTLE_IN_PLACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>These functions convert a host-endian value into little endianness.
+(I.e., they only perform a swap if the current host is big-endian.)</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Byte order</a><ul>
+<li><a class="reference internal" href="#endianness-detection">Endianness detection</a></li>
+<li><a class="reference internal" href="#byte-swapping">Byte swapping</a><ul>
+<li><a class="reference internal" href="#swapping-arbitrary-expressions">Swapping arbitrary expressions</a></li>
+<li><a class="reference internal" href="#swapping-values-in-place">Swapping values in place</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="unique-ids.html"
+                        title="previous chapter">Unique identifiers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="attributes.html"
+                        title="next chapter">Compiler attributes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/byte-order.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="attributes.html" title="Compiler attributes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="unique-ids.html" title="Unique identifiers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

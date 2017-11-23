@@ -1,0 +1,273 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>128-bit integers &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Network addresses" href="net-addresses.html" />
+    <link rel="prev" title="Basic types" href="basic-types.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="net-addresses.html" title="Network addresses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="basic-types.html" title="Basic types"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" accesskey="U">Basic types</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bit-integers">
+<span id="int128"></span><h1>128-bit integers<a class="headerlink" href="#bit-integers" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>We provide an API for working with unsigned, 128-bit integers.  Unlike libraries
+like <a class="reference external" href="http://gmplib.org/">GMP</a>, our goal is not to support arbitrarily large integers, but to provide
+optimized support for this one specific integer type.  We might add support for
+additional large integer types in the future, as need arises, but the focus will
+always be on a small number of specific types, and not on arbitrary sizes.  For
+that, use GMP.</p>
+<dl class="type">
+<dt id="c.cork_u128">
+<code class="descname">cork_u128</code><a class="headerlink" href="#c.cork_u128" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned, 128-bit integer.  You can assume that instances of this type
+will be exactly 16 bytes in size, and that the integer value will be stored
+in host-endian order.  This type is currently implemented as a <code class="docutils literal"><span class="pre">struct</span></code>,
+but none of its members are part of the public API.</p>
+</dd></dl>
+
+<div class="section" id="initialization">
+<h2>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_u128_from_32">
+<a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a> <code class="descname">cork_u128_from_32</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;i0</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;i1</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;i2</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;i3</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_from_32" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_from_64">
+<a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a> <code class="descname">cork_u128_from_64</code><span class="sig-paren">(</span><a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;i0</em>, <a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a><em>&nbsp;i1</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_from_64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a 128-bit integer initialized with the given portions.  The various
+<em>iX</em> pieces are given in big-endian order, regardless of the host’s
+endianness.  For instance, both of the following initialize an integer to
+<span class="math">\(2^{64}\)</span>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_u128</span>  <span class="n">value1</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="n">cork_u128</span>  <span class="n">value2</span> <span class="o">=</span> <span class="n">cork_u128_from_64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="accessing-subsets">
+<h2>Accessing subsets<a class="headerlink" href="#accessing-subsets" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_u128_be8">
+&amp;<a class="reference internal" href="basic-types.html#c.uint8_t" title="uint8_t">uint8_t</a> <code class="descname">cork_u128_be8</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em>, unsigned int<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_be8" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_be16">
+&amp;<a class="reference internal" href="basic-types.html#c.uint16_t" title="uint16_t">uint16_t</a> <code class="descname">cork_u128_be16</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em>, unsigned int<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_be16" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_be32">
+&amp;<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_u128_be32</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em>, unsigned int<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_be32" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_be64">
+&amp;<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a> <code class="descname">cork_u128_be64</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em>, unsigned int<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_be64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a reference to a portion of a 128-bit integer.  Regardless of the
+host’s endianness, the indices are counted in big-endian order — i.e., an
+<em>index</em> of <code class="docutils literal"><span class="pre">0</span></code> will always return the most-significant portion of <em>value</em>.</p>
+<p>The result is a valid lvalue, so you can assign to it to update the contents
+of <em>value</em>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_u128</span>  <span class="n">value</span><span class="p">;</span>
+<span class="n">cork_u128_be64</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="n">cork_u128_be64</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="arithmetic">
+<h2>Arithmetic<a class="headerlink" href="#arithmetic" title="Permalink to this headline">¶</a></h2>
+<p>All of the functions in this section are implemented as macros or inline
+functions, so you won’t incur any function-call overhead when using them.</p>
+<dl class="function">
+<dt id="c.cork_u128_add">
+<a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a> <code class="descname">cork_u128_add</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_sub">
+<a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a> <code class="descname">cork_u128_sub</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add or subtract two 128-bit integers, returning the result.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_u128</span>  <span class="n">a</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+<span class="n">cork_u128</span>  <span class="n">b</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">cork_u128</span>  <span class="n">c</span> <span class="o">=</span> <span class="n">cork_u128_add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
+<span class="n">cork_u128</span>  <span class="n">d</span> <span class="o">=</span> <span class="n">cork_u128_sub</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
+<span class="c1">// c == 13 &amp;&amp; d == 7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="comparison">
+<h2>Comparison<a class="headerlink" href="#comparison" title="Permalink to this headline">¶</a></h2>
+<p>All of the functions in this section are implemented as macros or inline
+functions, so you won’t incur any function-call overhead when using them.</p>
+<dl class="function">
+<dt id="c.cork_u128_eq">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_eq</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_eq" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_ne">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_ne</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_ne" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_lt">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_lt</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_lt" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_le">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_le</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_le" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_gt">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_gt</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_gt" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_ge">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_u128_ge</code><span class="sig-paren">(</span>cork_128<em>&nbsp;a</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;b</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_ge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two 128-bit integers.  These functions correspond, respectively, to
+the <code class="docutils literal"><span class="pre">==</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code> operators.</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_u128</span>  <span class="n">a</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+<span class="n">cork_u128</span>  <span class="n">b</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="c1">// cork_u128_eq(a, b) → false</span>
+<span class="c1">// cork_u128_ne(a, b) → true</span>
+<span class="c1">// cork_u128_eq(a, a) → true</span>
+<span class="c1">// cork_u128_gt(a, b) → true</span>
+<span class="c1">// cork_u128_ge(a, a) → true</span>
+<span class="c1">// and so on</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="printing">
+<h2>Printing<a class="headerlink" href="#printing" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_u128_to_decimal">
+const char *<code class="descname">cork_u128_to_decimal</code><span class="sig-paren">(</span>char<em>&nbsp;*buf</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_to_decimal" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_to_hex">
+const char *<code class="descname">cork_u128_to_hex</code><span class="sig-paren">(</span>char<em>&nbsp;*buf</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_to_hex" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_u128_to_padded_hex">
+const char *<code class="descname">cork_u128_to_padded_hex</code><span class="sig-paren">(</span>char<em>&nbsp;*buf</em>, <a class="reference internal" href="#c.cork_u128" title="cork_u128">cork_u128</a><em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_u128_to_padded_hex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the string representation of <em>value</em> into <em>buf</em>.  The <code class="docutils literal"><span class="pre">decimal</span></code> and
+<code class="docutils literal"><span class="pre">hex</span></code> variants do not include any padding in the result.  The
+<code class="docutils literal"><span class="pre">padded_hex</span></code> variant pads the result with <code class="docutils literal"><span class="pre">0</span></code> characters so that the
+string representation of every <a class="reference internal" href="#c.cork_u128" title="cork_u128"><code class="xref c c-type docutils literal"><span class="pre">cork_u128</span></code></a> has the same width.</p>
+<p>You must provide the buffer that the string representation will be rendered
+into.  (This ensures that these functions are thread-safe.)  The return value
+will be some portion of this buffer, but might not be <em>buf</em> itself.</p>
+<p>You are responsible for ensuring that <em>buf</em> is large enough to hold the
+string representation of any valid 128-bit integer.  The
+<a class="reference internal" href="#c.CORK_U128_DECIMAL_LENGTH" title="CORK_U128_DECIMAL_LENGTH"><code class="xref c c-macro docutils literal"><span class="pre">CORK_U128_DECIMAL_LENGTH</span></code></a> and <a class="reference internal" href="#c.CORK_U128_HEX_LENGTH" title="CORK_U128_HEX_LENGTH"><code class="xref c c-macro docutils literal"><span class="pre">CORK_U128_HEX_LENGTH</span></code></a>
+macros can be helpful for this:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">char</span>  <span class="n">buf</span><span class="p">[</span><span class="n">CORK_U128_DECIMAL_LENGTH</span><span class="p">];</span>
+<span class="n">cork_u128</span>  <span class="n">value</span> <span class="o">=</span> <span class="n">cork_u128_from_32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">125</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">cork_u128_to_decimal</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">value</span><span class="p">));</span>
+<span class="c1">// prints &quot;125\n&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_U128_DECIMAL_LENGTH">
+<code class="descname">CORK_U128_DECIMAL_LENGTH</code><a class="headerlink" href="#c.CORK_U128_DECIMAL_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_U128_HEX_LENGTH">
+<code class="descname">CORK_U128_HEX_LENGTH</code><a class="headerlink" href="#c.CORK_U128_HEX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum length of the decimal or hexadecimal string representation of a
+128-bit integer, including a <code class="docutils literal"><span class="pre">NUL</span></code> terminator.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">128-bit integers</a><ul>
+<li><a class="reference internal" href="#initialization">Initialization</a></li>
+<li><a class="reference internal" href="#accessing-subsets">Accessing subsets</a></li>
+<li><a class="reference internal" href="#arithmetic">Arithmetic</a></li>
+<li><a class="reference internal" href="#comparison">Comparison</a></li>
+<li><a class="reference internal" href="#printing">Printing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="basic-types.html"
+                        title="previous chapter">Basic types</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="net-addresses.html"
+                        title="next chapter">Network addresses</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/int128.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="net-addresses.html" title="Network addresses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="basic-types.html" title="Basic types"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" >Basic types</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

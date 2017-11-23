@@ -1,5 +1,12 @@
 #!/usr/bin/env ruby
 
+# Legacy Sphinx documentation
+passthrough '/0.14.0/**/*'
+passthrough '/0.14.1/**/*'
+passthrough '/0.14.2/**/*'
+passthrough '/0.14.3/**/*'
+passthrough '/0.15.0/**/*'
+
 compile '/**/index.html' do
   filter :erb, :trim_mode => '-'
   layout '/default.html'

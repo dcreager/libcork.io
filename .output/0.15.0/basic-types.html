@@ -1,0 +1,258 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Basic types &#8212; libcork 0.15.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.15.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="128-bit integers" href="int128.html" />
+    <link rel="prev" title="Symbol visibility" href="visibility.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="int128.html" title="128-bit integers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="visibility.html" title="Symbol visibility"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="basic-types">
+<span id="id1"></span><h1>Basic types<a class="headerlink" href="#basic-types" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The types in this section ensure that the C99 integer types are
+available, regardless of platform.  We also define some preprocessor
+macros that give the size of the non-fixed-size standard types.  In
+addition, libcork defines some useful low-level types:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="int128.html">128-bit integers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="net-addresses.html">Network addresses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestamps.html">High-precision timestamps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hash-values.html">Hash values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unique-ids.html">Unique identifiers</a></li>
+</ul>
+</div>
+<div class="section" id="integral-types">
+<h2>Integral types<a class="headerlink" href="#integral-types" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.bool">
+<code class="descname">bool</code><a class="headerlink" href="#c.bool" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean.  Where possible, we simply include <code class="docutils literal"><span class="pre">&lt;stdbool.h&gt;</span></code> to get
+this type.  It might be <code class="docutils literal"><span class="pre">typedef</span></code>ed to <code class="docutils literal"><span class="pre">int</span></code>.  We also make
+sure that the following constants are defined:</p>
+<dl class="var">
+<dt id="c.false">
+<a class="reference internal" href="#c.bool" title="bool">bool</a> <code class="descname">false</code><a class="headerlink" href="#c.false" title="Permalink to this definition">¶</a></dt>
+<dt id="c.true">
+<a class="reference internal" href="#c.bool" title="bool">bool</a> <code class="descname">true</code><a class="headerlink" href="#c.true" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="type">
+<dt id="c.int8_t">
+<code class="descname">int8_t</code><a class="headerlink" href="#c.int8_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.uint8_t">
+<code class="descname">uint8_t</code><a class="headerlink" href="#c.uint8_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.int16_t">
+<code class="descname">int16_t</code><a class="headerlink" href="#c.int16_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.uint16_t">
+<code class="descname">uint16_t</code><a class="headerlink" href="#c.uint16_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.int32_t">
+<code class="descname">int32_t</code><a class="headerlink" href="#c.int32_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.uint32_t">
+<code class="descname">uint32_t</code><a class="headerlink" href="#c.uint32_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.int64_t">
+<code class="descname">int64_t</code><a class="headerlink" href="#c.int64_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.uint64_t">
+<code class="descname">uint64_t</code><a class="headerlink" href="#c.uint64_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signed and unsigned, fixed-size integral types.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.intptr_t">
+<code class="descname">intptr_t</code><a class="headerlink" href="#c.intptr_t" title="Permalink to this definition">¶</a></dt>
+<dt id="c.uintptr_t">
+<code class="descname">uintptr_t</code><a class="headerlink" href="#c.uintptr_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Signed and unsigned integers that are guaranteed to be big enough to
+hold a type-cast <code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code>.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.size_t">
+<code class="descname">size_t</code><a class="headerlink" href="#c.size_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unsigned integer big enough to hold the size of a memory object,
+or a maximal array index.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.ptrdiff_t">
+<code class="descname">ptrdiff_t</code><a class="headerlink" href="#c.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>A signed integer big enough to hold the difference between two
+pointers.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="size-macros">
+<h2>Size macros<a class="headerlink" href="#size-macros" title="Permalink to this headline">¶</a></h2>
+<dl class="macro">
+<dt id="c.CORK_SIZEOF_SHORT">
+<code class="descname">CORK_SIZEOF_SHORT</code><a class="headerlink" href="#c.CORK_SIZEOF_SHORT" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SIZEOF_INT">
+<code class="descname">CORK_SIZEOF_INT</code><a class="headerlink" href="#c.CORK_SIZEOF_INT" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SIZEOF_LONG">
+<code class="descname">CORK_SIZEOF_LONG</code><a class="headerlink" href="#c.CORK_SIZEOF_LONG" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_SIZEOF_POINTER">
+<code class="descname">CORK_SIZEOF_POINTER</code><a class="headerlink" href="#c.CORK_SIZEOF_POINTER" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size (in bytes) of the <code class="docutils literal"><span class="pre">short</span></code>, <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">long</span></code>, and <code class="docutils literal"><span class="pre">void</span>
+<span class="pre">*</span></code> types, respectively.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="embedded-structs">
+<span id="embedded-struct"></span><h2>Embedded <code class="docutils literal"><span class="pre">struct</span></code>s<a class="headerlink" href="#embedded-structs" title="Permalink to this headline">¶</a></h2>
+<p>Quite often a callback function or API will take in a pointer to a
+particular <code class="docutils literal"><span class="pre">struct</span></code>, with the expectation that you can embed that
+<code class="docutils literal"><span class="pre">struct</span></code> into some other type for extension purposes.  Kind of a
+bastardized subclassing mechanism for C code.  The doubly-linked list
+module is a perfect example; you’re meant to embed
+<a class="reference internal" href="dllist.html#c.cork_dllist_item" title="cork_dllist_item"><code class="xref c c-type docutils literal"><span class="pre">cork_dllist_item</span></code></a> within the linked list element type.  You can
+use the following macro to obtain the pointer to the containing
+(“subclass”) <code class="docutils literal"><span class="pre">struct</span></code>, when given a pointer to the contained
+(“superclass”) <code class="docutils literal"><span class="pre">struct</span></code>:</p>
+<dl class="function">
+<dt id="c.cork_container_of">
+struct_type *<code class="descname">cork_container_of</code><span class="sig-paren">(</span>field_type<em>&nbsp;*field</em>, TYPE<em>&nbsp;struct_type</em>, FIELD<em>&nbsp;field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_container_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <em>struct_type</em> parameter must be the name of a <code class="docutils literal"><span class="pre">struct</span></code> type,
+<em>field_name</em> must be the name of some field within that
+<code class="docutils literal"><span class="pre">struct</span></code>, and <em>field</em> must be a pointer to an instance of that
+field.  The macro returns a pointer to the containing <code class="docutils literal"><span class="pre">struct</span></code>.
+So, given the following definitions:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">superclass</span> <span class="p">{</span>
+    <span class="kt">int</span>  <span class="n">a</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">subclass</span> <span class="p">{</span>
+    <span class="kt">int</span>  <span class="n">b</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">superclass</span>  <span class="n">parent</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">subclass</span>  <span class="n">instance</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>then the following identity holds:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_container_of</span><span class="p">(</span><span class="o">&amp;</span><span class="n">instance</span><span class="p">.</span><span class="n">parent</span><span class="p">,</span> <span class="k">struct</span> <span class="n">subclass</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">instance</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When the superclass <code class="docutils literal"><span class="pre">struct</span></code> appears as the first element
+of the subclass <code class="docutils literal"><span class="pre">struct</span></code>, you can obtain the same effect using a
+simple type-cast.  However, the <code class="docutils literal"><span class="pre">cork_container_of</span></code> macro is
+more robust, since it also works when the superclass <code class="docutils literal"><span class="pre">struct</span></code>
+appears later on in the subclass <code class="docutils literal"><span class="pre">struct</span></code>.</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic types</a><ul>
+<li><a class="reference internal" href="#integral-types">Integral types</a></li>
+<li><a class="reference internal" href="#size-macros">Size macros</a></li>
+<li><a class="reference internal" href="#embedded-structs">Embedded <code class="docutils literal"><span class="pre">struct</span></code>s</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="visibility.html"
+                        title="previous chapter">Symbol visibility</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="int128.html"
+                        title="next chapter">128-bit integers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/basic-types.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="int128.html" title="128-bit integers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="visibility.html" title="Symbol visibility"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

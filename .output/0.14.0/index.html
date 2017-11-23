@@ -1,0 +1,239 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>libcork documentation &#8212; libcork 0.14.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuring libcork" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">libcork 0.14.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="project-name-documentation">
+<span id="index"></span><h1>libcork documentation<a class="headerlink" href="#project-name-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This is the documentation for libcork 0.14.0, last updated
+Nov 22, 2017.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>So what is libcork, exactly?  It’s a “simple, easily embeddable, cross-platform
+C library”.  It falls roughly into the same category as <a class="reference external" href="http://library.gnome.org/devel/glib/">glib</a> or <a class="reference external" href="http://apr.apache.org/">APR</a> in the C
+world; the STL, <a class="reference external" href="http://pocoproject.org/">POCO</a>, or <a class="reference external" href="http://qt.nokia.com/">QtCore</a> in the C++ world; or the standard libraries
+of any decent dynamic language.</p>
+<p>So if libcork has all of these comparables, why a new library?  Well, none of
+the C++ options are really applicable here.  And none of the C options work,
+because one of the main goals is to have the library be highly modular, and
+useful in resource-constrained systems.  Once we describe some of the design
+decisions that we’ve made in libcork, you’ll hopefully see how this fits into
+an interesting niche of its own.</p>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuring libcork</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config.html#configuration-macros">Configuration macros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html#skipping-autodetection">Skipping autodetection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="visibility.html">Symbol visibility</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="visibility.html#defining-a-library-s-public-api">Defining a library’s public API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visibility.html#local-symbols">Local symbols</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="basic-types.html">Basic types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="int128.html">128-bit integers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="net-addresses.html">Network addresses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timestamps.html">High-precision timestamps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hash-values.html">Hash values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unique-ids.html">Unique identifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-types.html#integral-types">Integral types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-types.html#size-macros">Size macros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic-types.html#embedded-structs">Embedded <code class="docutils literal"><span class="pre">struct</span></code>s</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="byte-order.html">Byte order</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="byte-order.html#endianness-detection">Endianness detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="byte-order.html#byte-swapping">Byte swapping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="attributes.html">Compiler attributes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="allocation.html">Memory allocation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="allocation.html#allocating-memory">Allocating memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="allocation.html#customizing-how-libcork-allocates">Customizing how libcork allocates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error reporting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="errors.html#calling-a-function-that-can-return-an-error">Calling a function that can return an error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="errors.html#writing-a-function-that-can-return-an-error">Writing a function that can return an error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="errors.html#error-checking-macros">Error-checking macros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="errors.html#defining-new-error-codes">Defining new error codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="errors.html#builtin-errors">Builtin errors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gc.html">Reference-counted garbage collection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gc.html#creating-a-garbage-collector">Creating a garbage collector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gc.html#managing-garbage-collected-objects">Managing garbage-collected objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gc.html#writing-a-new-garbage-collected-class">Writing a new garbage-collected class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mempool.html">Memory pools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mempool.html#basic-interface">Basic interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mempool.html#initializing-and-finalizing-objects">Initializing and finalizing objects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ds.html">Data structures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="array.html">Resizable arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bitset.html">Bit sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slice.html">Binary slices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="managed-buffer.html">Managed binary buffers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="buffer.html">Resizable binary buffers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stream.html">Stream processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dllist.html">Doubly-linked lists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hash-table.html">Hash tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ring-buffer.html">Ring buffers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-line programs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#leaf-commands">Leaf commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#command-sets">Command sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#running-the-commands">Running the commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#help-text">Help text</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#option-parsing">Option parsing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="files.html">Files and directories</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="files.html#paths">Paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#lists-of-paths">Lists of paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#standard-paths">Standard paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#id1">Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#directories">Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#lists-of-files">Lists of files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files.html#directory-walking">Directory walking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">Processes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="process.html#cleanup-functions">Cleanup functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process.html#environment-variables">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process.html#executing-another-program">Executing another program</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="subprocess.html">Subprocesses</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="subprocess.html#subprocess-objects">Subprocess objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subprocess.html#creating-subprocesses">Creating subprocesses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="threads.html">Multithreading support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="threads.html#thread-ids">Thread IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="threads.html#creating-threads">Creating threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="threads.html#atomic-operations">Atomic operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="threads.html#executing-something-once">Executing something once</a></li>
+<li class="toctree-l2"><a class="reference internal" href="threads.html#thread-local-storage">Thread-local storage</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">libcork documentation</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="next chapter">Configuring libcork</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="config.html" title="Configuring libcork"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">libcork 0.14.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

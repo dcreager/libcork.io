@@ -1,0 +1,273 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Network addresses &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="High-precision timestamps" href="timestamps.html" />
+    <link rel="prev" title="128-bit integers" href="int128.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="timestamps.html" title="High-precision timestamps"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="int128.html" title="128-bit integers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" accesskey="U">Basic types</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="network-addresses">
+<span id="net-addresses"></span><h1>Network addresses<a class="headerlink" href="#network-addresses" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<div class="section" id="ip-addresses">
+<h2>IP addresses<a class="headerlink" href="#ip-addresses" title="Permalink to this headline">¶</a></h2>
+<p>libcork provides C types for storing IPv4 and IPv6 addresses, as well as
+a union type for storing a generic IP address, regardless of whether
+it’s IPv4 or IPv6.  (This lets you distinguish between an IPv4 address
+and the equivalent <code class="docutils literal"><span class="pre">::ffff:0:0/96</span></code> IPv4-mapped IPv6 address.)</p>
+<dl class="type">
+<dt id="c.cork_ipv4">
+struct <code class="descname">cork_ipv4</code><a class="headerlink" href="#c.cork_ipv4" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6">
+struct <code class="descname">cork_ipv6</code><a class="headerlink" href="#c.cork_ipv6" title="Permalink to this definition">¶</a></dt>
+<dd><p>An IPv4 or IPv6 address.  The address is stored in memory exactly as
+it would be if sent over a network connection — i.e., in
+network-endian order, regardless of the endianness of the current
+host.  The types are also guaranteed to be exactly the size of an
+actual IPv4 or IPv6 address (without additional padding), so they can
+be embedded directly into <code class="docutils literal"><span class="pre">struct</span></code> types that represent binary
+disk/wire formats.</p>
+<p>The contents of these types should be considered opaque.  You should
+use the accessor functions defined below to interact with the IP
+address.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_ip">
+struct <code class="descname">cork_ip</code><a class="headerlink" href="#c.cork_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single union type that can contain either an IPv4 or IPv6 address.
+This type contains a discriminator field, so you can’t use it
+directly in a binary disk/wire format type.</p>
+<dl class="member">
+<dt id="c.cork_ip.version">
+unsigned int  <code class="descname">version</code><a class="headerlink" href="#c.cork_ip.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Either <code class="docutils literal"><span class="pre">4</span></code> or <code class="docutils literal"><span class="pre">6</span></code>, indicating whether the current IP address
+is an IPv4 address or an IPv6 address.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_ip.ip.v4">
+struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a>  <code class="descname">ip.v4</code><a class="headerlink" href="#c.cork_ip.ip.v4" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip.ip.v6">
+struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a>  <code class="descname">ip.v6</code><a class="headerlink" href="#c.cork_ip.ip.v6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives you access to the underlying <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv4</span></code></a> or
+<a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv6</span></code></a> instance for the current address.  It’s your
+responsibility to check the <a class="reference internal" href="#c.cork_ip.version" title="cork_ip.version"><code class="xref c c-member docutils literal"><span class="pre">cork_ip.version</span></code></a> field and
+only access the union branch that corresponds to the current IP
+version.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ipv4_copy">
+void <code class="descname">cork_ipv4_copy</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr</em>, const void<em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv4_copy" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6_copy">
+void <code class="descname">cork_ipv6_copy</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr</em>, const void<em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv6_copy" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_from_ipv4">
+void <code class="descname">cork_ip_from_ipv4</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr</em>, const void<em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_from_ipv4" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_from_ipv6">
+void <code class="descname">cork_ip_from_ipv6</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr</em>, const void<em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_from_ipv6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv4</span></code></a>, <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv6</span></code></a>, or
+<a class="reference internal" href="#c.cork_ip" title="cork_ip"><code class="xref c c-type docutils literal"><span class="pre">cork_ip</span></code></a> instance from an existing IP address somewhere in
+memory.  The existing address doesn’t have to be an instance of the
+<a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv4</span></code></a> or <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv6</span></code></a> types, but it does have to
+be a well-formed address.  (For IPv4, it must be 4 bytes long; for
+IPv6, 16 bytes long.  And in both cases, the address must already be
+in network-endian order, regardless of the host’s endianness.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ipv4_init">
+int <code class="descname">cork_ipv4_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv4_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6_init">
+int <code class="descname">cork_ipv6_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv6_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_init">
+int <code class="descname">cork_ip_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr</em>, const char<em>&nbsp;*str</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv4</span></code></a>, <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6"><code class="xref c c-type docutils literal"><span class="pre">cork_ipv6</span></code></a>, or
+<a class="reference internal" href="#c.cork_ip" title="cork_ip"><code class="xref c c-type docutils literal"><span class="pre">cork_ip</span></code></a> instance from the string representation of an IP
+address.  <em>str</em> must point to a string containing a well-formed IP
+address.  (Dotted-quad for an IPv4, and colon-hex for IPv6.)
+Moreover, the version of the IP address in <em>str</em> must be compatible
+with the function that you call: it can’t be an IPv6 address if you
+call <code class="docutils literal"><span class="pre">cork_ipv4_init</span></code>, and it can’t be an IPv4 address if you call
+<code class="docutils literal"><span class="pre">cork_ipv6_init</span></code>.</p>
+<p>If <em>str</em> doesn’t represent a valid address (of a compatible IP
+version), then we leave <em>addr</em> unchanged, fill in the current error
+condition with a <a class="reference internal" href="#c.CORK_NET_ADDRESS_PARSE_ERROR" title="CORK_NET_ADDRESS_PARSE_ERROR"><code class="xref c c-data docutils literal"><span class="pre">CORK_NET_ADDRESS_PARSE_ERROR</span></code></a> error, and
+return <code class="docutils literal"><span class="pre">-1</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ipv4_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ipv4_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr1</em>, const struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv4_equal" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ipv6_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr1</em>, const struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv6_equal" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_equal">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ip_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr1</em>, const struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks two IP addresses for equality.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_IPV4_STRING_LENGTH">
+<code class="descname">CORK_IPV4_STRING_LENGTH</code><a class="headerlink" href="#c.CORK_IPV4_STRING_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_IPV6_STRING_LENGTH">
+<code class="descname">CORK_IPV6_STRING_LENGTH</code><a class="headerlink" href="#c.CORK_IPV6_STRING_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_IP_STRING_LENGTH">
+<code class="descname">CORK_IP_STRING_LENGTH</code><a class="headerlink" href="#c.CORK_IP_STRING_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum length of the string representation of an IPv4, IPv6, or
+generic IP address, including a <code class="docutils literal"><span class="pre">NUL</span></code> terminator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ipv4_to_raw_string">
+void <code class="descname">cork_ipv4_to_raw_string</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr</em>, char<em>&nbsp;*dest</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv4_to_raw_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6_to_raw_string">
+void <code class="descname">cork_ipv6_to_raw_string</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr</em>, char<em>&nbsp;*dest</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv6_to_raw_string" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_to_raw_string">
+void <code class="descname">cork_ip_to_raw_string</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ip" title="cork_ip">cork_ip</a><em>&nbsp;*addr</em>, char<em>&nbsp;*dest</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_to_raw_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills in <em>dest</em> with the string representation of an IPv4, IPv6, or
+generic IP address.  You are responsible for ensuring that <em>dest</em> is
+large enough to hold the string representation of any valid IP
+address of the given version.  The
+<a class="reference internal" href="#c.CORK_IPV4_STRING_LENGTH" title="CORK_IPV4_STRING_LENGTH"><code class="xref c c-macro docutils literal"><span class="pre">CORK_IPV4_STRING_LENGTH</span></code></a>,
+<a class="reference internal" href="#c.CORK_IPV6_STRING_LENGTH" title="CORK_IPV6_STRING_LENGTH"><code class="xref c c-macro docutils literal"><span class="pre">CORK_IPV6_STRING_LENGTH</span></code></a>, and
+<a class="reference internal" href="#c.CORK_IP_STRING_LENGTH" title="CORK_IP_STRING_LENGTH"><code class="xref c c-macro docutils literal"><span class="pre">CORK_IP_STRING_LENGTH</span></code></a> macros can be helpful for this:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">char</span>  <span class="n">buf</span><span class="p">[</span><span class="n">CORK_IPV4_STRING_LENGTH</span><span class="p">];</span>
+<span class="k">struct</span> <span class="n">cork_ipv4</span>  <span class="n">addr</span><span class="p">;</span>
+<span class="n">cork_ipv4_to_raw_string</span><span class="p">(</span><span class="o">&amp;</span><span class="n">addr</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_ipv4_is_valid_network">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ipv4_is_valid_network</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv4" title="cork_ipv4">cork_ipv4</a><em>&nbsp;*addr</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv4_is_valid_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ipv6_is_valid_network">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ipv6_is_valid_network</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ipv6_is_valid_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_ip_is_valid_network">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_ip_is_valid_network</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_ipv6" title="cork_ipv6">cork_ipv6</a><em>&nbsp;*addr</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_ip_is_valid_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks an IP address for alignment with a CIDR block prefix. For example,
+10.1.2.4/24 is invalid, but 10.1.2.4/30 is valid.</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_NET_ADDRESS_ERROR">
+<code class="descname">CORK_NET_ADDRESS_ERROR</code><a class="headerlink" href="#c.CORK_NET_ADDRESS_ERROR" title="Permalink to this definition">¶</a></dt>
+<dt id="c.CORK_NET_ADDRESS_PARSE_ERROR">
+<code class="descname">CORK_NET_ADDRESS_PARSE_ERROR</code><a class="headerlink" href="#c.CORK_NET_ADDRESS_PARSE_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd><p>The error class and codes used for the <a class="reference internal" href="errors.html#errors"><span class="std std-ref">error conditions</span></a> described in this section.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Network addresses</a><ul>
+<li><a class="reference internal" href="#ip-addresses">IP addresses</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="int128.html"
+                        title="previous chapter">128-bit integers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="timestamps.html"
+                        title="next chapter">High-precision timestamps</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/net-addresses.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="timestamps.html" title="High-precision timestamps"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="int128.html" title="128-bit integers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" >Basic types</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

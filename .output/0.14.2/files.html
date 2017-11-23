@@ -1,0 +1,623 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Files and directories &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Processes" href="process.html" />
+    <link rel="prev" title="Command-line programs" href="cli.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="process.html" title="Processes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cli.html" title="Command-line programs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="files-and-directories">
+<span id="files"></span><h1>Files and directories<a class="headerlink" href="#files-and-directories" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/os.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section let you interact with files and directories in the
+local filesystem.</p>
+<div class="section" id="paths">
+<h2>Paths<a class="headerlink" href="#paths" title="Permalink to this headline">¶</a></h2>
+<p>We provide several functions for constructing and handling paths into the local
+filesystem.</p>
+<dl class="type">
+<dt id="c.cork_path">
+struct <code class="descname">cork_path</code><a class="headerlink" href="#c.cork_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a path in the local filesystem.  The path can be relative or
+absolute.  The paths don’t have to refer to existing files or directories.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_new">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_new" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_clone">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_clone</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*other</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_clone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a new path object from the given path string, or as a copy of
+another path object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_free">
+void <code class="descname">cork_path_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a path object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_get">
+const char *<code class="descname">cork_path_get</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the string content of a path.  This is not normalized in any way.  The
+result is guaranteed to be non-<code class="docutils literal"><span class="pre">NULL</span></code>, but may refer to an empty string.
+The return value belongs to the path object; you must not modify the contents
+of the string, nor should you try to free the underlying memory.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_absolute">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_absolute</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*other</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_absolute" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_make_absolute">
+int <code class="descname">cork_path_make_absolute</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_make_absolute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a relative path into an absolute path.  The first variant constructs
+a new path object to hold the result; the second variant overwritesthe
+contents of <em>path</em>.</p>
+<p>If there is a problem obtaining the current working directory, these
+functions will return an error condition.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_join">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_join</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em>, const char<em>&nbsp;*more</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_join" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_join_path">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_join_path</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em>, const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*more</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_join_path" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_append">
+void *<code class="descname">cork_path_append</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;path</em>, const char<em>&nbsp;*more</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_append" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_append_path">
+void *<code class="descname">cork_path_append_path</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em>, const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*more</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_append_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenate two paths together.  The <code class="docutils literal"><span class="pre">join</span></code> variants create a new path
+object containing the concatenated results.  The <code class="docutils literal"><span class="pre">append</span></code> variants
+overwrite the contents of <em>path</em> with the concatenated results.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_basename">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_basename</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_basename" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_set_basename">
+void *<code class="descname">cork_path_set_basename</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_set_basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the base name of <em>path</em>.  This is the portion after the final
+trailing slash.  The first variant constructs a new path object to hold the
+result; the second variant overwritesthe contents of <em>path</em>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>These functions return a different result than the standard
+<code class="docutils literal"><span class="pre">basename(3)</span></code> function.  We consider a trailing slash to be significant,
+whereas <code class="docutils literal"><span class="pre">basename(3)</span></code> does not:</p>
+<div class="last highlight-c"><div class="highlight"><pre><span></span><span class="n">basename</span><span class="p">(</span><span class="s">&quot;a/b/c/&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;c&quot;</span>
+<span class="n">cork_path_basename</span><span class="p">(</span><span class="s">&quot;a/b/c/&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_dirname">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_dirname</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_dirname" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_set_dirname">
+void *<code class="descname">cork_path_set_dirname</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_set_dirname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the directory name of <em>path</em>.  This is the portion before the final
+trailing slash.  The first variant constructs a new path object to hold the
+result; the second variant overwritesthe contents of <em>path</em>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>These functions return a different result than the standard <code class="docutils literal"><span class="pre">dirname(3)</span></code>
+function.  We consider a trailing slash to be significant, whereas
+<code class="docutils literal"><span class="pre">dirname(3)</span></code> does not:</p>
+<div class="last highlight-c"><div class="highlight"><pre><span></span><span class="n">dirname</span><span class="p">(</span><span class="s">&quot;a/b/c/&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;a/b&quot;</span>
+<span class="n">cork_path_dirname</span><span class="p">(</span><span class="s">&quot;a/b/c/&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;a/b/c&quot;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="lists-of-paths">
+<h2>Lists of paths<a class="headerlink" href="#lists-of-paths" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_path_list">
+struct <code class="descname">cork_path_list</code><a class="headerlink" href="#c.cork_path_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of paths in the local filesystem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_new_empty">
+struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a> *<code class="descname">cork_path_list_new_empty</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_new_empty" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_list_new">
+struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a> *<code class="descname">cork_path_list_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new list of paths.  The first variant creates a list that is
+initially empty.  The second variant takes in a colon-separated list of paths
+as a single string, and adds each of those paths to the new list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_free">
+void <code class="descname">cork_path_list_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a path list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_add">
+void <code class="descname">cork_path_list_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add <em>path</em> to <em>list</em>.  The list takes control of the path instance; you must
+not try to free <em>path</em> yourself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_size">
+size_t <code class="descname">cork_path_list_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of paths in <em>list</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_get">
+const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_list_get</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the path in <em>list</em> at the given <em>index</em>.  The list still owns the path
+instance that’s returned; you must not try to free it or modify its contents.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_to_string">
+const char *<code class="descname">cork_path_list_to_string</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string containing all of the paths in <em>list</em> separated by colons.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_list_find_file">
+struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a> *<code class="descname">cork_path_list_find_file</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em>, const char<em>&nbsp;*rel_path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_find_file" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_path_list_find_files">
+struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a> *<code class="descname">cork_path_list_find_files</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*list</em>, const char<em>&nbsp;*rel_file</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_list_find_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for a file in a list of paths.  <em>rel_path</em> gives the path of the
+sought-after file, relative to each of the directories in <em>list</em>.</p>
+<p>The first variant returns a <a class="reference internal" href="#c.cork_file" title="cork_file"><code class="xref c c-type docutils literal"><span class="pre">cork_file</span></code></a> instance for the first match.
+In no file can be found, it returns <code class="docutils literal"><span class="pre">NULL</span></code> and sets an error condition.</p>
+<p>The second variant returns a <a class="reference internal" href="#c.cork_file_list" title="cork_file_list"><code class="xref c c-type docutils literal"><span class="pre">cork_file_list</span></code></a> instance containing all
+of the matches.  In no file can be found, we return an empty list.  (Unlike
+the first variant, this is not considered an error.)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="standard-paths">
+<h2>Standard paths<a class="headerlink" href="#standard-paths" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_path_home">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_home</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_home" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#c.cork_path" title="cork_path"><code class="xref c c-type docutils literal"><span class="pre">cork_path</span></code></a> that refers to the current user’s home
+directory.  If we can’t determine the current user’s home directory, we set
+an error condition and return <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+<p>On POSIX systems, this directory is determined by the <code class="docutils literal"><span class="pre">HOME</span></code> environment
+variable.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_config_paths">
+struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a> *<code class="descname">cork_path_config_paths</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_config_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#c.cork_path_list" title="cork_path_list"><code class="xref c c-type docutils literal"><span class="pre">cork_path_list</span></code></a> that includes all of the standard
+directories that can be used to store configuration files.  This includes a
+user-specific directory that allows the user to override any global
+configuration files.</p>
+<p>On POSIX systems, these directories are defined XDG Base Directory
+Specification.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_data_paths">
+struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a> *<code class="descname">cork_path_data_paths</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_data_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#c.cork_path_list" title="cork_path_list"><code class="xref c c-type docutils literal"><span class="pre">cork_path_list</span></code></a> that includes all of the standard
+directories that can be used to store application data files.  This includes
+a user-specific directory that allows the user to override any global data
+files.</p>
+<p>On POSIX systems, these directories are defined XDG Base Directory
+Specification.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_user_cache_path">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_user_cache_path</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_user_cache_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#c.cork_path" title="cork_path"><code class="xref c c-type docutils literal"><span class="pre">cork_path</span></code></a> that refers to a directory that can be used to
+store cache files created on behalf of the current user.  This directory
+should only be used to store data that you can reproduce if needed.</p>
+<p>On POSIX systems, these directories are defined XDG Base Directory
+Specification.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_path_user_runtime_path">
+struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_path_user_runtime_path</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_path_user_runtime_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#c.cork_path" title="cork_path"><code class="xref c c-type docutils literal"><span class="pre">cork_path</span></code></a> that refers to a directory that can be used to
+store small runtime management files on behalf of the current user.</p>
+<p>On POSIX systems, these directories are defined XDG Base Directory
+Specification.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h2>Files<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_file">
+struct <code class="descname">cork_file</code><a class="headerlink" href="#c.cork_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a file on the local filesystem.  The file in question does not
+necessarily have to exist; you can use <a class="reference internal" href="#c.cork_file" title="cork_file"><code class="xref c c-type docutils literal"><span class="pre">cork_file</span></code></a> instances to refer
+to files that you have not yet created, for instance.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_file_mode">
+typedef unsigned int  <code class="descname">cork_file_mode</code><a class="headerlink" href="#c.cork_file_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a Unix-style file permission set.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_new">
+struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a> *<code class="descname">cork_file_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_new" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_file_new_from_path">
+struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a> *<code class="descname">cork_file_new_from_path</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a><em>&nbsp;*path</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_new_from_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#c.cork_file" title="cork_file"><code class="xref c c-type docutils literal"><span class="pre">cork_file</span></code></a> instance to represent the file with the
+given <em>path</em>.  The <code class="docutils literal"><span class="pre">_from_path</span></code> variant uses an existing
+<a class="reference internal" href="#c.cork_path" title="cork_path"><code class="xref c c-type docutils literal"><span class="pre">cork_path</span></code></a> instance to specify the path.  The new file instance will
+take control of the :c:type`cork_path` instance, so you should not try to
+free it yourself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_free">
+void <code class="descname">cork_file_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a file instance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_path">
+const struct <a class="reference internal" href="#c.cork_path" title="cork_path">cork_path</a> *<code class="descname">cork_file_path</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the path of a file.  The <a class="reference internal" href="#c.cork_path" title="cork_path"><code class="xref c c-type docutils literal"><span class="pre">cork_path</span></code></a> instance belongs to the
+file; you must not try to modify or free the path instance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_exists">
+int <code class="descname">cork_file_exists</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;*exists</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether a file exists in the filesystem, storing the result in
+<em>exists</em>.  The function returns an error condition if we are unable to
+determine whether the file exists — for instance, because you do not have
+permission to look into one of the containing directories.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_type">
+int <code class="descname">cork_file_type</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em>, enum <a class="reference internal" href="#c.cork_file_type" title="cork_file_type">cork_file_type</a><em>&nbsp;*type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return what kind of file the given <a class="reference internal" href="#c.cork_file" title="cork_file"><code class="xref c c-type docutils literal"><span class="pre">cork_file</span></code></a> instance refers to.
+The function returns an error condition if there is an error accessing the
+file — for instance, because you do not have permission to look into one of
+the containing directories.</p>
+<p>If the function succeeds, it will fill in <em>type</em> with one of the following
+values:</p>
+<dl class="type">
+<dt>
+enum <code class="descname">cork_file_type</code></dt>
+<dd><dl class="member">
+<dt id="c.cork_file_type.CORK_FILE_MISSING">
+<code class="descname">CORK_FILE_MISSING</code><a class="headerlink" href="#c.cork_file_type.CORK_FILE_MISSING" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>file</em> does not exist.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_file_type.CORK_FILE_REGULAR">
+<code class="descname">CORK_FILE_REGULAR</code><a class="headerlink" href="#c.cork_file_type.CORK_FILE_REGULAR" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>file</em> is a regular file.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_file_type.CORK_FILE_DIRECTORY">
+<code class="descname">CORK_FILE_DIRECTORY</code><a class="headerlink" href="#c.cork_file_type.CORK_FILE_DIRECTORY" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>file</em> is a directory.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_file_type.CORK_FILE_SYMLINK">
+<code class="descname">CORK_FILE_SYMLINK</code><a class="headerlink" href="#c.cork_file_type.CORK_FILE_SYMLINK" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>file</em> is a symbolic link.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_file_type.CORK_FILE_UNKNOWN">
+<code class="descname">CORK_FILE_UNKNOWN</code><a class="headerlink" href="#c.cork_file_type.CORK_FILE_UNKNOWN" title="Permalink to this definition">¶</a></dt>
+<dd><p>We can access <em>file</em>, but we do not know what type of file it is.</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_remove">
+int <code class="descname">cork_file_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em>, unsigned int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove <em>file</em> from the filesystem.  <em>flags</em> must be the bitwise OR (<code class="docutils literal"><span class="pre">|</span></code>) of
+the following flags.  (Use <code class="docutils literal"><span class="pre">0</span></code> if you do not want any of the flags.)</p>
+<dl class="macro">
+<dt id="c.CORK_FILE_PERMISSIVE">
+<code class="descname">CORK_FILE_PERMISSIVE</code><a class="headerlink" href="#c.CORK_FILE_PERMISSIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this flag is given, then it is not considered an error if <em>file</em> does
+not exist.  If the flag is not given, then the function function returns
+an error if <em>file</em> doesn’t exist.  (This mimics the standard <code class="docutils literal"><span class="pre">rm</span> <span class="pre">-f</span></code>
+command.)</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c.CORK_FILE_RECURSIVE">
+<code class="descname">CORK_FILE_RECURSIVE</code><a class="headerlink" href="#c.CORK_FILE_RECURSIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this flag is given, and <em>file</em> refers to a directory, then the function
+will automatically remove the directory and all of its contents.  If the
+flag is not given, and <em>file</em> refers to a directory, then the directory
+must be empty for this function to succeed.  If <em>file</em> does not refer to a
+directory, this flag has no effect.  (This mimics the standard <code class="docutils literal"><span class="pre">rmdir</span>
+<span class="pre">-r</span></code> command.)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="directories">
+<h2>Directories<a class="headerlink" href="#directories" title="Permalink to this headline">¶</a></h2>
+<p>Certain functions can only be applied to a <a class="reference internal" href="#c.cork_file" title="cork_file"><code class="xref c c-type docutils literal"><span class="pre">cork_file</span></code></a> instance that
+refers to a directory.</p>
+<dl class="function">
+<dt id="c.cork_file_mkdir">
+int <code class="descname">cork_file_mkdir</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*directory</em>, <a class="reference internal" href="#c.cork_file_mode" title="cork_file_mode">cork_file_mode</a><em>&nbsp;mode</em>, unsigned int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_mkdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new directory in the filesystem, with permissions given by <em>mode</em>.
+<em>flags</em> must be the bitwise OR (<code class="docutils literal"><span class="pre">|</span></code>) of the following flags.  (Use <code class="docutils literal"><span class="pre">0</span></code> if
+you do not want any of the flags.)</p>
+<dl class="macro">
+<dt>
+<code class="descname">CORK_FILE_PERMISSIVE</code></dt>
+<dd><p>If this flag is given, then it is not considered an error if <em>directory</em>
+already exists.  If the flag is not given, then the function function
+returns an error if <em>directory</em> exists.  (This mimics part of the standard
+<code class="docutils literal"><span class="pre">mkdir</span> <span class="pre">-p</span></code> command.)</p>
+</dd></dl>
+
+<dl class="macro">
+<dt>
+<code class="descname">CORK_FILE_RECURSIVE</code></dt>
+<dd><p>If this flag is given, then the function will ensure that all of the
+parent directories of <em>directory</em> exist, creating them if necessary.  Each
+directory created will have permissions given by <em>mode</em>.  (This mimics
+part of the standard <code class="docutils literal"><span class="pre">mkdir</span> <span class="pre">-p</span></code> command.)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_iterate_directory">
+int <code class="descname">cork_file_iterate_directory</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*directory</em>, <a class="reference internal" href="#c.cork_file_directory_iterator" title="cork_file_directory_iterator">cork_file_directory_iterator</a><em>&nbsp;iterator</em>, void<em>&nbsp;*user_data</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_iterate_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call <em>iterator</em> for each file or subdirectory contained in <em>directory</em> (not
+including the directory’s <code class="docutils literal"><span class="pre">.</span></code> and <code class="docutils literal"><span class="pre">..</span></code> entries).  This function does not
+recurse into any subdirectories; it only iterates through the immediate
+children of <em>directory</em>.</p>
+<p>If your iteration function returns a non-zero result, we will abort the
+iteration and return that value.  Otherwise, if each call to the iteration
+function returns <code class="docutils literal"><span class="pre">0</span></code>, then we will return <code class="docutils literal"><span class="pre">0</span></code> as well.</p>
+<p><em>iterator</em> must be an instance of the following function type:</p>
+<dl class="type">
+<dt id="c.cork_file_directory_iterator">
+typedef int <code class="descname">(*cork_file_directory_iterator)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*child</em>, const char<em>&nbsp;*rel_name</em>, void<em>&nbsp;*user_data</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_directory_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called for each child entry in <em>directory</em>.  <em>child</em> will be a file
+instance referring to the child entry.  <em>rel_name</em> gives the relative name
+of the child entry within its parent <em>directory</em>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lists-of-files">
+<h2>Lists of files<a class="headerlink" href="#lists-of-files" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_file_list">
+struct <code class="descname">cork_file_list</code><a class="headerlink" href="#c.cork_file_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of files in the local filesystem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_list_new_empty">
+struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a> *<code class="descname">cork_file_list_new_empty</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_new_empty" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_file_list_new">
+struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a> *<code class="descname">cork_file_list_new</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_path_list" title="cork_path_list">cork_path_list</a><em>&nbsp;*path_list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new list of files.  The first variant creates a list that is
+initially empty.  The second variant adds a new file instance for each of the
+paths in <em>path_list</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_list_free">
+void <code class="descname">cork_file_list_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a file list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_list_add">
+void <code class="descname">cork_file_list_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a><em>&nbsp;*list</em>, struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a><em>&nbsp;*file</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add <em>file</em> to <em>list</em>.  The list takes control of the file instance; you must
+not try to free <em>file</em> yourself.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_list_size">
+size_t <code class="descname">cork_file_list_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a><em>&nbsp;*list</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of files in <em>list</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_file_list_get">
+struct <a class="reference internal" href="#c.cork_file" title="cork_file">cork_file</a> *<code class="descname">cork_file_list_get</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.cork_file_list" title="cork_file_list">cork_file_list</a><em>&nbsp;*list</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_list_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the file in <em>list</em> at the given <em>index</em>.  The list still owns the file
+instance that’s returned; you must not try to free it.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="directory-walking">
+<h2>Directory walking<a class="headerlink" href="#directory-walking" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_walk_directory">
+int <code class="descname">cork_walk_directory</code><span class="sig-paren">(</span>const char<em>&nbsp;*path</em>, struct <a class="reference internal" href="#c.cork_dir_walker" title="cork_dir_walker">cork_dir_walker</a><em>&nbsp;*walker</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_walk_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Walk through the contents of a directory.  <em>path</em> can be an absolute or
+relative path.  If it’s relative, it will be interpreted relative to the
+current directory.  If <em>path</em> doesn’t exist, or there are any problems
+reading the contents of the directory, we’ll set an error condition and
+return <code class="docutils literal"><span class="pre">-1</span></code>.</p>
+<p>To process the contents of the directory, you must provide a <em>walker</em> object,
+which contains several callback methods that we will call when files and
+subdirectories of <em>path</em> are encountered.  Each method should return <code class="docutils literal"><span class="pre">0</span></code> on
+success.  Unless otherwise noted, if we receive any other return result, we
+will abort the directory walk, and return that same result from the
+<a class="reference internal" href="#c.cork_walk_directory" title="cork_walk_directory"><code class="xref c c-func docutils literal"><span class="pre">cork_walk_directory()</span></code></a> call itself.</p>
+<p>In all of the following methods, <em>base_name</em> will be the base name of the
+entry within its immediate subdirectory.  <em>rel_path</em> will be the relative
+path of the entry within the <em>path</em> that you originally asked to walk
+through.  <em>full_path</em> will the full path to the entry, including <em>path</em>
+itself.</p>
+<dl class="type">
+<dt id="c.cork_dir_walker">
+struct <code class="descname">cork_dir_walker</code><a class="headerlink" href="#c.cork_dir_walker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="member">
+<dt id="c.cork_dir_walker.file">
+int <code class="descname">(*file)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dir_walker" title="cork_dir_walker">cork_dir_walker</a><em>&nbsp;*walker</em>, const char<em>&nbsp;*full_path</em>, const char<em>&nbsp;*rel_path</em>, const char<em>&nbsp;*base_name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dir_walker.file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a regular file is encountered.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_dir_walker.enter_directory">
+int <code class="descname">(*enter_directory)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dir_walker" title="cork_dir_walker">cork_dir_walker</a><em>&nbsp;*walker</em>, const char<em>&nbsp;*full_path</em>, const char<em>&nbsp;*rel_path</em>, const char<em>&nbsp;*base_name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dir_walker.enter_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a subdirectory of <em>path</em> of encountered.  If you don’t want
+to recurse into this directory, return <a class="reference internal" href="#c.CORK_SKIP_DIRECTORY" title="CORK_SKIP_DIRECTORY"><code class="xref c c-data docutils literal"><span class="pre">CORK_SKIP_DIRECTORY</span></code></a>.</p>
+<dl class="macro">
+<dt id="c.CORK_SKIP_DIRECTORY">
+<code class="descname">CORK_SKIP_DIRECTORY</code><a class="headerlink" href="#c.CORK_SKIP_DIRECTORY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_dir_walker.leave_directory">
+int <code class="descname">(*leave_directory)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_dir_walker" title="cork_dir_walker">cork_dir_walker</a><em>&nbsp;*walker</em>, const char<em>&nbsp;*full_path</em>, const char<em>&nbsp;*rel_path</em>, const char<em>&nbsp;*base_name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_dir_walker.leave_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a subdirectory has been fully processed.</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Files and directories</a><ul>
+<li><a class="reference internal" href="#paths">Paths</a></li>
+<li><a class="reference internal" href="#lists-of-paths">Lists of paths</a></li>
+<li><a class="reference internal" href="#standard-paths">Standard paths</a></li>
+<li><a class="reference internal" href="#id1">Files</a></li>
+<li><a class="reference internal" href="#directories">Directories</a></li>
+<li><a class="reference internal" href="#lists-of-files">Lists of files</a></li>
+<li><a class="reference internal" href="#directory-walking">Directory walking</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cli.html"
+                        title="previous chapter">Command-line programs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="process.html"
+                        title="next chapter">Processes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/files.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="process.html" title="Processes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cli.html" title="Command-line programs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

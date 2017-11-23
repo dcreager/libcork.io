@@ -1,0 +1,354 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Stream processing &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Doubly-linked lists" href="dllist.html" />
+    <link rel="prev" title="Resizable binary buffers" href="buffer.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dllist.html" title="Doubly-linked lists"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="buffer.html" title="Resizable binary buffers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="stream-processing">
+<span id="stream"></span><h1>Stream processing<a class="headerlink" href="#stream-processing" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<div class="section" id="stream-producers">
+<h2>Stream producers<a class="headerlink" href="#stream-producers" title="Permalink to this headline">¶</a></h2>
+<p>A <em>producer</em> of binary data should take in a pointer to a
+<a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer"><code class="xref c c-type docutils literal"><span class="pre">cork_stream_consumer</span></code></a> instance.  Any data that is produced by the
+stream is then sent into the consumer instance for processing.  Once the stream
+has been exhausted (for instance, by reaching the end of a file), you signal
+this to the consumer.  During both of these steps, the consumer is able to
+signal error conditions; for instance, a stream consumer that parses a
+particular file format might return an error condition if the stream of data is
+malformed.  If possible, the stream producer can try to recover from the error
+condition, but more often, the stream producer will simply pass the error back
+up to its caller.</p>
+<dl class="function">
+<dt id="c.cork_stream_consumer_data">
+int <code class="descname">cork_stream_consumer_data</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em>, const void<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;is_first_chunk</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send the next chunk of data into a stream consumer.  You only have to ensure
+that <em>buf</em> is valid for the duration of this function call; the stream
+consumer is responsible for saving a copy of the data if it needs to be
+processed later.  In particular, this means that it’s perfectly safe for
+<em>buf</em> to refer to a stack-allocated memory region.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_stream_consumer_eof">
+int <code class="descname">cork_stream_consumer_eof</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer_eof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notify the stream consumer that the end of the stream has been reached.  The
+stream consumer might perform some final validation and error detection at
+this point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_stream_consumer_free">
+void <code class="descname">cork_stream_consumer_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalize and deallocate a stream consumer.</p>
+</dd></dl>
+
+<div class="section" id="built-in-stream-producers">
+<h3>Built-in stream producers<a class="headerlink" href="#built-in-stream-producers" title="Permalink to this headline">¶</a></h3>
+<p>We provide several built-in stream producers:</p>
+<dl class="function">
+<dt id="c.cork_consume_fd">
+int <code class="descname">cork_consume_fd</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em>, int<em>&nbsp;fd</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_consume_fd" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_consume_file">
+int <code class="descname">cork_consume_file</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em>, FILE<em>&nbsp;*fp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_consume_file" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_consume_file_from_path">
+int <code class="descname">cork_consume_file_from_path</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em>, const char<em>&nbsp;*path</em>, int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_consume_file_from_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in a file, passing its contents into the given stream consumer.  The
+<code class="docutils literal"><span class="pre">_fd</span></code> and <code class="docutils literal"><span class="pre">_file</span></code> variants consume a file that you’ve already opened; you
+are responsible for closing the file after its been consumed.  The
+<code class="docutils literal"><span class="pre">_file_from_path</span></code> variant will open the file for you, using the standard
+<code class="docutils literal"><span class="pre">open(2)</span></code> function with the given <em>flags</em>.  This variant will close the
+file before returning, regardless of whether the file was successfully
+consumed or not.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-stream-producer-example">
+<h3>File stream producer example<a class="headerlink" href="#file-stream-producer-example" title="Permalink to this headline">¶</a></h3>
+<p>As an example, we could implement the <a class="reference internal" href="#c.cork_consume_file" title="cork_consume_file"><code class="xref c c-func docutils literal"><span class="pre">cork_consume_file()</span></code></a> stream
+producer as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/errors.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#define BUFFER_SIZE  65536</span>
+
+<span class="kt">int</span>
+<span class="nf">cork_consume_file</span><span class="p">(</span><span class="k">struct</span> <span class="n">cork_stream_consumer</span> <span class="o">*</span><span class="n">consumer</span><span class="p">,</span> <span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">char</span>  <span class="n">buf</span><span class="p">[</span><span class="n">BUFFER_SIZE</span><span class="p">];</span>
+    <span class="kt">size_t</span>  <span class="n">bytes_read</span><span class="p">;</span>
+    <span class="kt">bool</span>  <span class="n">first</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+
+    <span class="k">while</span> <span class="p">((</span><span class="n">bytes_read</span> <span class="o">=</span> <span class="n">fread</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">BUFFER_SIZE</span><span class="p">,</span> <span class="n">fp</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">rii_check</span><span class="p">(</span><span class="n">cork_stream_consumer_data</span><span class="p">(</span><span class="n">consumer</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">bytes_read</span><span class="p">,</span> <span class="n">first</span><span class="p">));</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">feof</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">cork_stream_consumer_eof</span><span class="p">(</span><span class="n">consumer</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">cork_system_error_set</span><span class="p">();</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that this stream producer does not take care of opening or closing
+the <code class="docutils literal"><span class="pre">FILE</span></code> object, nor does it take care of freeing the consumer.  (Our actual
+implementation of <a class="reference internal" href="#c.cork_consume_file" title="cork_consume_file"><code class="xref c c-func docutils literal"><span class="pre">cork_consume_file()</span></code></a> also correctly handles <code class="docutils literal"><span class="pre">EINTR</span></code>
+errors, and so is a bit more complex.  But this example still works as an
+illustration of how to pass data into a stream consumer.)</p>
+</div>
+</div>
+<div class="section" id="stream-consumers">
+<span id="id1"></span><h2>Stream consumers<a class="headerlink" href="#stream-consumers" title="Permalink to this headline">¶</a></h2>
+<p>To consume data from a stream, you must create a type that implements the
+<a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer"><code class="xref c c-type docutils literal"><span class="pre">cork_stream_consumer</span></code></a> interface.</p>
+<dl class="type">
+<dt id="c.cork_stream_consumer">
+struct <code class="descname">cork_stream_consumer</code><a class="headerlink" href="#c.cork_stream_consumer" title="Permalink to this definition">¶</a></dt>
+<dd><p>An interface for consumer a stream of binary data.  The producer of
+the stream will call the <a class="reference internal" href="#c.cork_stream_consumer_data" title="cork_stream_consumer_data"><code class="xref c c-func docutils literal"><span class="pre">cork_stream_consumer_data()</span></code></a>
+function repeatedly, once for each successive chunk of data in the
+stream.  Once the stream has been exhausted, the producer will call
+<a class="reference internal" href="#c.cork_stream_consumer_eof" title="cork_stream_consumer_eof"><code class="xref c c-func docutils literal"><span class="pre">cork_stream_consumer_eof()</span></code></a> to signal the end of the stream.</p>
+<dl class="member">
+<dt id="c.cork_stream_consumer.data">
+int <code class="descname">(*data)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em>, const void<em>&nbsp;*buf</em>, size_t<em>&nbsp;size</em>, <a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a><em>&nbsp;is_first_chunk</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the next chunk of data in the stream.  <em>buf</em> is only
+guaranteed to be valid for the duration of this function call.  If
+you need to access the contents of the slice later, you must save
+it somewhere yourself.</p>
+<p>If there is an error processing this chunk of data, you should
+return <code class="docutils literal"><span class="pre">-1</span></code> and fill in the current error condition using
+<code class="xref c c-func docutils literal"><span class="pre">cork_error_set()</span></code>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_stream_consumer.eof">
+int <code class="descname">(*eof)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer.eof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the end of the stream.  This allows you to defer any final
+validation or error detection until all of the data has been
+processed.</p>
+<p>If there is an error detected at this point, you should return
+<code class="docutils literal"><span class="pre">-1</span></code> and fill in the current error condition using
+<code class="xref c c-func docutils literal"><span class="pre">cork_error_set()</span></code>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_stream_consumer.free">
+void <code class="descname">(*free)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a><em>&nbsp;*consumer</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_stream_consumer.free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free the consumer object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="built-in-stream-consumers">
+<h3>Built-in stream consumers<a class="headerlink" href="#built-in-stream-consumers" title="Permalink to this headline">¶</a></h3>
+<p>We provide several built-in stream consumers:</p>
+<dl class="function">
+<dt id="c.cork_fd_consumer_new">
+struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a> *<code class="descname">cork_fd_consumer_new</code><span class="sig-paren">(</span>int<em>&nbsp;fd</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_fd_consumer_new" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_file_consumer_new">
+struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a> *<code class="descname">cork_file_consumer_new</code><span class="sig-paren">(</span>FILE<em>&nbsp;*fp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_consumer_new" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_file_from_path_consumer_new">
+struct <a class="reference internal" href="#c.cork_stream_consumer" title="cork_stream_consumer">cork_stream_consumer</a> *<code class="descname">cork_file_from_path_consumer_new</code><span class="sig-paren">(</span>const char<em>&nbsp;*path</em>, int<em>&nbsp;flags</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_file_from_path_consumer_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a stream consumer that appends any data that it receives to a file.
+The <code class="docutils literal"><span class="pre">_fd</span></code> and <code class="docutils literal"><span class="pre">_file</span></code> variants append to a file that you’ve already
+opened; you are responsible for closing the file after the consumer has
+finished processing data.  The <code class="docutils literal"><span class="pre">_file_from_path</span></code> variant will open the file
+for you, using the standard <code class="docutils literal"><span class="pre">open(2)</span></code> function with the given <em>flags</em>.
+This variant will close the file before returning, regardless of whether the
+stream consumer successfully processed the data or not.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-stream-consumer-example">
+<h3>File stream consumer example<a class="headerlink" href="#file-stream-consumer-example" title="Permalink to this headline">¶</a></h3>
+<p>As an example, we could implement a stream consumer for the
+<a class="reference internal" href="#c.cork_file_consumer_new" title="cork_file_consumer_new"><code class="xref c c-func docutils literal"><span class="pre">cork_file_consumer_new()</span></code></a> function as follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/errors.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+
+<span class="k">struct</span> <span class="n">cork_file_consumer</span> <span class="p">{</span>
+    <span class="cm">/* cork_file_consumer implements the cork_stream_consumer interface */</span>
+    <span class="k">struct</span> <span class="n">cork_stream_consumer</span>  <span class="n">parent</span><span class="p">;</span>
+    <span class="cm">/* the file to write the data into */</span>
+    <span class="kt">FILE</span>  <span class="o">*</span><span class="n">fp</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">static</span> <span class="kt">int</span>
+<span class="nf">cork_file_consumer__data</span><span class="p">(</span><span class="k">struct</span> <span class="n">cork_stream_consumer</span> <span class="o">*</span><span class="n">vself</span><span class="p">,</span>
+                         <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">is_first</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">file_consumer</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span>
+        <span class="n">cork_container_of</span><span class="p">(</span><span class="n">vself</span><span class="p">,</span> <span class="k">struct</span> <span class="n">cork_file_consumer</span><span class="p">,</span> <span class="n">parent</span><span class="p">);</span>
+    <span class="kt">size_t</span>  <span class="n">bytes_written</span> <span class="o">=</span> <span class="n">fwrite</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">self</span><span class="o">-&gt;</span><span class="n">fp</span><span class="p">);</span>
+    <span class="cm">/* If there was an error writing to the file, then signal this to</span>
+<span class="cm">     * the producer */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">bytes_written</span> <span class="o">==</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">cork_system_error_set</span><span class="p">();</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">int</span>
+<span class="nf">cork_file_consumer__eof</span><span class="p">(</span><span class="k">struct</span> <span class="n">cork_stream_consumer</span> <span class="o">*</span><span class="n">vself</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* We don&#39;t close the file, so there&#39;s nothing special to do at</span>
+<span class="cm">     * end-of-stream. */</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span>
+<span class="nf">cork_file_consumer__free</span><span class="p">(</span><span class="k">struct</span> <span class="n">cork_stream_consumer</span> <span class="o">*</span><span class="n">vself</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">file_consumer</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span>
+        <span class="n">cork_container_of</span><span class="p">(</span><span class="n">vself</span><span class="p">,</span> <span class="k">struct</span> <span class="n">cork_file_consumer</span><span class="p">,</span> <span class="n">parent</span><span class="p">);</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">cork_stream_consumer</span> <span class="o">*</span>
+<span class="nf">cork_file_consumer_new</span><span class="p">(</span><span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">cork_file_consumer</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">cork_new</span><span class="p">(</span><span class="k">struct</span> <span class="n">cork_file_consumer</span><span class="p">);</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">cork_file_consumer__data</span><span class="p">;</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">eof</span> <span class="o">=</span> <span class="n">cork_file_consumer__eof</span><span class="p">;</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">free</span> <span class="o">=</span> <span class="n">cork_file_consumer__free</span><span class="p">;</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fp</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that this stream consumer does not take care of opening or closing the
+<code class="docutils literal"><span class="pre">FILE</span></code> object.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Stream processing</a><ul>
+<li><a class="reference internal" href="#stream-producers">Stream producers</a><ul>
+<li><a class="reference internal" href="#built-in-stream-producers">Built-in stream producers</a></li>
+<li><a class="reference internal" href="#file-stream-producer-example">File stream producer example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stream-consumers">Stream consumers</a><ul>
+<li><a class="reference internal" href="#built-in-stream-consumers">Built-in stream consumers</a></li>
+<li><a class="reference internal" href="#file-stream-consumer-example">File stream consumer example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="buffer.html"
+                        title="previous chapter">Resizable binary buffers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dllist.html"
+                        title="next chapter">Doubly-linked lists</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/stream.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dllist.html" title="Doubly-linked lists"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="buffer.html" title="Resizable binary buffers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,236 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>High-precision timestamps &#8212; libcork 0.15.0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.15.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Hash values" href="hash-values.html" />
+    <link rel="prev" title="Network addresses" href="net-addresses.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="hash-values.html" title="Hash values"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="net-addresses.html" title="Network addresses"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" accesskey="U">Basic types</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="high-precision-timestamps">
+<span id="timestamps"></span><h1>High-precision timestamps<a class="headerlink" href="#high-precision-timestamps" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<dl class="type">
+<dt id="c.cork_timestamp">
+<a class="reference internal" href="basic-types.html#c.uint64_t" title="uint64_t">uint64_t</a>  <code class="descname">cork_timestamp</code><a class="headerlink" href="#c.cork_timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A high-precision timestamp type.  A timestamp is represented by a
+64-bit integer, whose unit is the <em>gammasecond</em> (γsec), where
+<span class="math">\(1~\textrm{γsec} = \frac{1}{2^{32}} \textrm{sec}\)</span>.  With this
+representation, the upper 32 bits of a timestamp value represent the
+timestamp truncated (towards zero) to seconds.</p>
+<p>For this type, we don’t concern ourselves with any higher-level
+issues of clock synchronization or time zones.  <code class="docutils literal"><span class="pre">cork_timestamp</span></code>
+values can be used to represent any time quantity, regardless of
+which time standard (UTC, GMT, TAI) you use, or whether it takes into
+account the local time zone.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_timestamp_init_sec">
+void <code class="descname">cork_timestamp_init_sec</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;sec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_sec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_init_gsec">
+void <code class="descname">cork_timestamp_init_gsec</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;sec</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;gsec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_gsec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_init_msec">
+void <code class="descname">cork_timestamp_init_msec</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;sec</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;msec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_msec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_init_usec">
+void <code class="descname">cork_timestamp_init_usec</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;sec</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;usec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_usec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_init_nsec">
+void <code class="descname">cork_timestamp_init_nsec</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;sec</em>, <a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a><em>&nbsp;nsec</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_nsec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a timestamp from a separate seconds part and fractional
+part.  For the <code class="docutils literal"><span class="pre">_sec</span></code> variant, the fractional part will be set to
+<code class="docutils literal"><span class="pre">0</span></code>.  For the <code class="docutils literal"><span class="pre">_gsec</span></code> variant, you provide the fractional part in
+gammaseconds.  For the <code class="docutils literal"><span class="pre">_msec</span></code>, <code class="docutils literal"><span class="pre">_usec</span></code>, and <code class="docutils literal"><span class="pre">_nsec</span></code> variants, the
+fractional part will be translated into gammaseconds from milliseconds,
+microseconds, or nanoseconds, respectively.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_timestamp_init_now">
+void <code class="descname">cork_timestamp_init_now</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;*ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_init_now" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a timestamp with the current UTC time of day.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The resolution of this function is system-dependent.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_timestamp_sec">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_timestamp_sec</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_sec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the seconds portion of a timestamp.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_timestamp_gsec">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_timestamp_gsec</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_gsec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_msec">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_timestamp_msec</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_msec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_usec">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_timestamp_usec</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_usec" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_nsec">
+<a class="reference internal" href="basic-types.html#c.uint32_t" title="uint32_t">uint32_t</a> <code class="descname">cork_timestamp_nsec</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_nsec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the fractional portion of a timestamp.  The variants return the
+fractional portion in, respectively, gammaseconds, milliseconds,
+microseconds, or nanoseconds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_timestamp_format_utc">
+int <code class="descname">cork_timestamp_format_utc</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em>, const char<em>&nbsp;*format</em>, struct <a class="reference internal" href="buffer.html#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_format_utc" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_timestamp_format_local">
+int <code class="descname">cork_timestamp_format_local</code><span class="sig-paren">(</span>const <a class="reference internal" href="#c.cork_timestamp" title="cork_timestamp">cork_timestamp</a><em>&nbsp;ts</em>, const char<em>&nbsp;*format</em>, struct <a class="reference internal" href="buffer.html#c.cork_buffer" title="cork_buffer">cork_buffer</a><em>&nbsp;*buf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_timestamp_format_local" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the string representation of the given timestamp according to
+<em>format</em>, appending the result to the current contents of <em>buf</em>.</p>
+<p>The <code class="docutils literal"><span class="pre">_utc</span></code> variant assumes that <em>ts</em> represents a UTC time, whereas the
+<code class="docutils literal"><span class="pre">_local</span></code> variant assumes that it represents a time in the local time zone.</p>
+<p><em>format</em> is a format string whose syntax is similar to that of the POSIX
+<code class="docutils literal"><span class="pre">strftime</span></code> function.  <em>format</em> must contain arbitrary text interspersed
+with <code class="docutils literal"><span class="pre">%</span></code> specifiers, which will be replaced with portions of the timestamp.
+The following specifiers are recognized (note that this list does <strong>not</strong>
+include all of the specifiers supported by <code class="docutils literal"><span class="pre">strftime</span></code>):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Specifier</th>
+<th class="head">Replacement</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">%%</span></code></td>
+<td>A literal <code class="docutils literal"><span class="pre">%</span></code> character</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">%d</span></code></td>
+<td>Day of month (<code class="docutils literal"><span class="pre">01</span></code>-<code class="docutils literal"><span class="pre">31</span></code>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">%[width]f</span></code></td>
+<td>Fractional seconds (zero-padded, limited to <code class="docutils literal"><span class="pre">[width]</span></code>
+digits)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">%H</span></code></td>
+<td>Hour in current day (<code class="docutils literal"><span class="pre">00</span></code>-<code class="docutils literal"><span class="pre">23</span></code>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">%m</span></code></td>
+<td>Month (<code class="docutils literal"><span class="pre">01</span></code>-<code class="docutils literal"><span class="pre">12</span></code>)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">%M</span></code></td>
+<td>Minute in current hour (<code class="docutils literal"><span class="pre">00</span></code>-<code class="docutils literal"><span class="pre">59</span></code>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">%s</span></code></td>
+<td>Number of seconds since Unix epoch</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">%S</span></code></td>
+<td>Second in current minute (<code class="docutils literal"><span class="pre">00</span></code>-<code class="docutils literal"><span class="pre">60</span></code>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">%Y</span></code></td>
+<td>Four-digit year (including century)</td>
+</tr>
+</tbody>
+</table>
+<p>If the format string is invalid, we will return an <a class="reference internal" href="errors.html#errors"><span class="std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="net-addresses.html"
+                        title="previous chapter">Network addresses</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hash-values.html"
+                        title="next chapter">Hash values</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/timestamps.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="hash-values.html" title="Hash values"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="net-addresses.html" title="Network addresses"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.15.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="basic-types.html" >Basic types</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

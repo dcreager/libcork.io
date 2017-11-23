@@ -1,0 +1,309 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Memory pools &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data structures" href="ds.html" />
+    <link rel="prev" title="Reference-counted garbage collection" href="gc.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ds.html" title="Data structures"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gc.html" title="Reference-counted garbage collection"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="memory-pools">
+<span id="mempool"></span><h1>Memory pools<a class="headerlink" href="#memory-pools" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section let you define <em>memory pools</em>, which allow
+you to reduce the overhead of allocating and freeing large numbers of
+small objects.  Instead of generating a <code class="docutils literal"><span class="pre">malloc</span></code> call for each
+individual object, the memory pool allocates a large <em>block</em> of memory,
+and then subdivides this block of memory into objects of the desired
+size.  The free objects in the memory pool are linked together in a
+singly-linked list, which means that allocation and deallocation is
+usually a (very small) constant-time operation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Memory pools are <em>not</em> thread safe; if you have multiple threads
+allocating objects of the same type, they’ll need separate memory
+threads.</p>
+</div>
+<div class="section" id="basic-interface">
+<h2>Basic interface<a class="headerlink" href="#basic-interface" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.cork_mempool">
+struct <code class="descname">cork_mempool</code><a class="headerlink" href="#c.cork_mempool" title="Permalink to this definition">¶</a></dt>
+<dd><p>A memory pool.  All of the objects created by the memory pool will be
+the same size; this size is provided when you initialize the memory
+pool.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_mempool_new_size">
+struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a> *<code class="descname">cork_mempool_new_size</code><span class="sig-paren">(</span>size_t<em>&nbsp;element_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_new_size" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_mempool_new">
+struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a> *<code class="descname">cork_mempool_new</code><span class="sig-paren">(</span>TYPE<em>&nbsp;type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a new memory pool.  The size of the objects allocated by
+the memory pool is given either as an explicit <em>element_size</em>, or by
+giving the <em>type</em> of the objects.  The blocks allocated by the memory
+pool will be of a default size (currently 4Kb).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_mempool_new_size_ex">
+struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a> *<code class="descname">cork_mempool_new_size_ex</code><span class="sig-paren">(</span>size_t<em>&nbsp;element_size</em>, size_t<em>&nbsp;block_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_new_size_ex" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_mempool_new_ex">
+struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a> *<code class="descname">cork_mempool_new_ex</code><span class="sig-paren">(</span>TYPE<em>&nbsp;type</em>, size_t<em>&nbsp;block_size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_new_ex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a new memory pool.  The size of the objects allocated by
+the memory pool is given either as an explicit <em>element_size</em>, or by
+giving the <em>type</em> of the objects.  The blocks allocated by the memory
+pool will be <em>block_size</em> bytes large.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_mempool_free">
+void <code class="descname">cork_mempool_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a><em>&nbsp;*mp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free a memory pool.  You <strong>must</strong> have already freed all of the
+objects allocated by the pool; if you haven’t, then this function
+will cause the current process to abort.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_mempool_new_object">
+void *<code class="descname">cork_mempool_new_object</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a><em>&nbsp;*mp</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_new_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocate a new object from the memory pool.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_mempool_free_object">
+void <code class="descname">cork_mempool_free_object</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a><em>&nbsp;*mp</em>, void<em>&nbsp;*ptr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_free_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free an object that was allocated from the memory pool.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="initializing-and-finalizing-objects">
+<span id="mempool-lifecycle"></span><h2>Initializing and finalizing objects<a class="headerlink" href="#initializing-and-finalizing-objects" title="Permalink to this headline">¶</a></h2>
+<p>When you free an object that was allocated via a memory pool, the memory
+for that object isn’t actually freed immediately.  (That’s kind of the
+reason that you’re using a memory pool in the first place.)  This means
+that if your object contains any fields that are expensive to initialize
+and finalize, it can make sense to postpone the finalization of those
+fields until the memory for the object itself is actually freed.</p>
+<p>As an example, let’s say you have the following type that you’re going
+to allocate via a memory pool:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">my_data</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">cork_buffer</span>  <span class="n">scratch_space</span><span class="p">;</span>
+    <span class="kt">int</span>  <span class="n">age</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Our first attempt at a constructor and destructor would then be:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n">cork_mempool</span>  <span class="o">*</span><span class="n">pool</span><span class="p">;</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">cork_mempool_new</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_data</span><span class="p">);</span>
+
+<span class="k">struct</span> <span class="n">my_data</span> <span class="o">*</span>
+<span class="nf">my_data_new</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">my_data</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">cork_mempool_new_object</span><span class="p">(</span><span class="n">pool</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">cork_buffer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">scratch_space</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span>
+<span class="nf">my_data_free</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_data</span> <span class="o">*</span><span class="n">self</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_buffer_done</span><span class="p">(</span><span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">scratch_space</span><span class="p">);</span>
+    <span class="n">cork_mempool_free_object</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>What’s interesting about this example is that the <code class="docutils literal"><span class="pre">scratch_space</span></code>
+field, being a <a class="reference internal" href="buffer.html#c.cork_buffer" title="cork_buffer"><code class="xref c c-type docutils literal"><span class="pre">cork_buffer</span></code></a>, allocates some space internally to
+hold whatever data we’re building up in the buffer.  When we call
+<a class="reference internal" href="buffer.html#c.cork_buffer_done" title="cork_buffer_done"><code class="xref c c-func docutils literal"><span class="pre">cork_buffer_done()</span></code></a> in our destructor, that memory is returned to
+the system.  Later on, when we allocate a new <code class="docutils literal"><span class="pre">my_data</span></code>, the
+<a class="reference internal" href="#c.cork_mempool_new_object" title="cork_mempool_new_object"><code class="xref c c-func docutils literal"><span class="pre">cork_mempool_new_object()</span></code></a> call in our constructor might get this same
+physical instance back.  We’ll then proceed to re-initialize the
+<code class="docutils literal"><span class="pre">scratch_space</span></code> buffer, which will then reallocate its internal buffer
+space as we use the type.</p>
+<p>Since we’re using a memory pool to reuse the memory for the <code class="docutils literal"><span class="pre">my_data</span></code>
+instance, we might as well try to reuse the memory for the
+<code class="docutils literal"><span class="pre">scratch_space</span></code> field, as well.  To do this, you provide initialization and
+finalization callbacks:</p>
+<dl class="function">
+<dt id="c.cork_mempool_set_callbacks">
+void <code class="descname">cork_mempool_set_callbacks</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_mempool" title="cork_mempool">cork_mempool</a><em>&nbsp;*mp</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="array.html#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_user_data</em>, <a class="reference internal" href="array.html#c.cork_init_f" title="cork_init_f">cork_init_f</a><em>&nbsp;init_object</em>, <a class="reference internal" href="array.html#c.cork_done_f" title="cork_done_f">cork_done_f</a><em>&nbsp;done_object</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_mempool_set_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide callback functions that will be used to initialize and finalize each
+object created by the memory pool.</p>
+</dd></dl>
+
+<p>So, instead of putting the initialization logic into our constructor, we
+put it into the <code class="docutils literal"><span class="pre">init_object</span></code> function.  Similarly, the finalization
+logic goes into <code class="docutils literal"><span class="pre">done_object</span></code>, and not our destructor:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span>
+<span class="nf">my_data_init</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">vself</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">my_data</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">vself</span><span class="p">;</span>
+    <span class="n">cork_buffer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">scratch_space</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span>
+<span class="nf">my_data_done</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">user_data</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">vself</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">my_data</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">vself</span><span class="p">;</span>
+    <span class="n">cork_buffer_done</span><span class="p">(</span><span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">scratch_space</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="n">cork_mempool</span>  <span class="o">*</span><span class="n">pool</span><span class="p">;</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">cork_mempool_new</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="k">struct</span> <span class="n">my_data</span><span class="p">);</span>
+<span class="n">cork_mempool_set_callbacks</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">my_data_init</span><span class="p">,</span> <span class="n">my_data_done</span><span class="p">);</span>
+
+<span class="k">struct</span> <span class="n">my_data</span> <span class="o">*</span>
+<span class="nf">my_data_new</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">cork_mempool_new_object</span><span class="p">(</span><span class="n">pool</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span>
+<span class="nf">my_data_free</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_data</span> <span class="o">*</span><span class="n">self</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_mempool_free_object</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this implementation, the <code class="docutils literal"><span class="pre">scratch_space</span></code> buffer is initialized when
+the memory for an instance is first allocated, and it’s not finalized
+until the memory for the instance is returned to the system.  (Which
+basically means “when the memory pool itself is freed”.)</p>
+<p>A caveat with this approach is that we’ve no longer guaranteed that the
+<code class="docutils literal"><span class="pre">scratch_space</span></code> buffer is empty when <code class="docutils literal"><span class="pre">my_data_new</span></code> returns — if
+we’re reusing an existing object, then the contents of the “previous”
+object’s buffer will still be there.  We can either make sure that
+consumers of <code class="docutils literal"><span class="pre">my_data</span></code> don’t assume anything about the contents of
+<code class="docutils literal"><span class="pre">scratch_space</span></code>, or better yet, we can <em>reset</em> the fields in our
+constructor object:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">my_data</span> <span class="o">*</span>
+<span class="nf">my_data_new</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">my_data</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">cork_mempool_new_object</span><span class="p">(</span><span class="n">pool</span><span class="p">);</span>
+    <span class="n">cork_buffer_clear</span><span class="p">(</span><span class="o">&amp;</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">scratch_space</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example, we can reset the buffer just by clearing it.  If
+resetting is more involved, it can sometimes be better to leave the
+instance in a “messy” state, and have your clients not make assumptions.
+But if you do this, make sure to be clear about it in your
+documentation.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Memory pools</a><ul>
+<li><a class="reference internal" href="#basic-interface">Basic interface</a></li>
+<li><a class="reference internal" href="#initializing-and-finalizing-objects">Initializing and finalizing objects</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gc.html"
+                        title="previous chapter">Reference-counted garbage collection</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ds.html"
+                        title="next chapter">Data structures</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mempool.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ds.html" title="Data structures"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gc.html" title="Reference-counted garbage collection"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

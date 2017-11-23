@@ -1,0 +1,548 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Reference-counted garbage collection &#8212; libcork 0.14.2 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Memory pools" href="mempool.html" />
+    <link rel="prev" title="Error reporting" href="errors.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mempool.html" title="Memory pools"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="errors.html" title="Error reporting"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="reference-counted-garbage-collection">
+<span id="gc"></span><h1>Reference-counted garbage collection<a class="headerlink" href="#reference-counted-garbage-collection" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/core.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>The functions in this section implement a reference counting garbage
+collector.  The garbage collector handles reference cycles correctly.
+It is <strong>not</strong> a conservative garbage collector — i.e., we don’t assume
+that every word inside an object might be a pointer.  Instead, each
+garbage-collected object must provide a <em>recursion function</em> that knows
+how to delve down into any child objects that it references.</p>
+<p>The garbage collector is <strong>not</strong> thread-safe.  If your application is
+multi-threaded, each thread will (automatically) have its own garbage
+collection context.  There are two strategies that you can use when
+using the garbage collector in a multi-threaded application:</p>
+<ul class="simple">
+<li>Have a single “master” thread be responsible for the lifecycle of
+every object.  This thread is the only one allowed to interact with
+the garbage collector.  <strong>No</strong> other threads are allowed to call any
+of the functions in this section, including the
+<a class="reference internal" href="#c.cork_gc_incref" title="cork_gc_incref"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_incref()</span></code></a> and <a class="reference internal" href="#c.cork_gc_decref" title="cork_gc_decref"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_decref()</span></code></a> functions.
+Other threads are allowed to access the objects that are managed by
+the garbage collector, but the master thread must ensure that all
+objects are live whenever another thread attempts to use them.  This
+will require some kind of thread-safe communication or synchronization
+between the master thread and the worker threads.</li>
+<li>Have a separate garbage collector per thread.  Each object is “owned”
+by a single thread, and the object is managed by that thread’s garbage
+collector.  As with the first strategy, other threads can use any
+object, as long as the object’s owner thread is able to guarantee that
+the object will be live for as long as it’s needed.  (Eventually we’ll
+also support migrating an object from one garbage collector to
+another, but that feature isn’t currently implemented.)</li>
+</ul>
+<p>The garbage collection implementation is based on the algorithm
+described in §3 of <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Bacon, DF and Rajan VT.  <em>Concurrent cycle collection in
+reference counted systems</em>.  Proc. ECOOP 2001.  LNCS 2072.</td></tr>
+</tbody>
+</table>
+<div class="section" id="creating-a-garbage-collector">
+<h2>Creating a garbage collector<a class="headerlink" href="#creating-a-garbage-collector" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.cork_gc_init">
+void <code class="descname">cork_gc_init</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initalizes a garbage collection context for the current thread.
+Usually, you can allocate this on the stack of your <code class="docutils literal"><span class="pre">main</span></code>
+function:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">cork_gc_init</span><span class="p">();</span>
+
+    <span class="c1">// use the GC context</span>
+
+    <span class="c1">// and free it when you&#39;re done</span>
+    <span class="n">cork_gc_done</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It’s not required that you call this function at all; if you don’t,
+we’ll automatically initialize a garbage collection context for the
+current thread the first time you try to allocate a garbage-collected
+object.  You can call this function, though, if you want to have more
+control over when the initialization occurs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_gc_done">
+void <code class="descname">cork_gc_done</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalize the garbage collection context for the current thread.  All
+objects created in this thread will be freed when this function
+returns.</p>
+<p>You must call this function in each thread that allocates
+garbage-collected objects, just before that thread finishes.  (If
+your application is single-threaded, then you must call this function
+before the <code class="docutils literal"><span class="pre">main</span></code> function finishes.)  If you don’t, you’ll almost
+certainly get memory leaks.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="managing-garbage-collected-objects">
+<h2>Managing garbage-collected objects<a class="headerlink" href="#managing-garbage-collected-objects" title="Permalink to this headline">¶</a></h2>
+<p>A garbage collection context can’t be used to manage arbitrary objects,
+since each garbage-collected class must define some callback functions
+for interacting with the garbage collector.  (The <a class="reference internal" href="#new-gc-class"><span class="std std-ref">next section</span></a> contains more details.)</p>
+<p>Each garbage-collected class will provide its own constructor function
+for instantiating a new instance of that class.  There aren’t any
+explicit destructors for garbage-collected objects; instead you manage
+“references” to the objects.  Each pointer to a garbage-collected object
+is a reference, and each object maintains a count of the references to
+itself.  A newly constructed object starts with a reference count of
+<code class="docutils literal"><span class="pre">1</span></code>.  Whenever you save a pointer to a garbage-collected object, you
+should increase the object’s reference count.  When you’re done with the
+pointer, you decrease its reference count.  When the reference count
+drops to <code class="docutils literal"><span class="pre">0</span></code>, the garbage collector frees the object.</p>
+<dl class="function">
+<dt id="c.cork_gc_incref">
+void *<code class="descname">cork_gc_incref</code><span class="sig-paren">(</span>void<em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_incref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increments the reference count of an object <em>obj</em> that is managed by
+the current thread’s garbage collector.  We always return <em>obj</em> as a
+result, which allows you to use the following idiom:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">my_obj</span> <span class="o">*</span> <span class="n">my_copy_of_obj</span> <span class="o">=</span> <span class="n">cork_gc_incref</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_gc_decref">
+void <code class="descname">cork_gc_decref</code><span class="sig-paren">(</span>void<em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_decref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrements the reference count of an object <em>obj</em> that is managed by
+the current thread’s garbage collector  If the reference count drops
+to <code class="docutils literal"><span class="pre">0</span></code>, then the garbage collector will free the object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It’s safe to call this function with a <code class="docutils literal"><span class="pre">NULL</span></code> <em>obj</em> pointer; in
+this case, the function acts as a no-op.</p>
+</div>
+</dd></dl>
+
+<div class="section" id="borrowing-a-reference">
+<span id="borrow-ref"></span><h3>Borrowing a reference<a class="headerlink" href="#borrowing-a-reference" title="Permalink to this headline">¶</a></h3>
+<p>While the strategy mentioned above implies that you should call
+<a class="reference internal" href="#c.cork_gc_incref" title="cork_gc_incref"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_incref()</span></code></a> and <a class="reference internal" href="#c.cork_gc_decref" title="cork_gc_decref"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_decref()</span></code></a> for <em>every</em>
+pointer to a garbage-collected object, you can sometimes get away
+without bumping the reference count.  In particular, you can often
+<em>borrow</em> an existing reference to an object, if you can guarantee that
+the borrowed reference will exist for as long as you need access to the
+object.  The most common example of this when you pass in a
+garbage-collected object as the parameter to a function:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">use_new_reference</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_obj</span> <span class="o">*</span><span class="n">obj</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* Here we&#39;re being pedantically correct, and incrementing obj&#39;s</span>
+<span class="cm">     * reference count since we&#39;ve got our own pointer to the object. */</span>
+    <span class="n">cork_gc_incref</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+
+    <span class="cm">/* Do something useful with obj */</span>
+
+    <span class="cm">/* And now that we&#39;re done with it, decrement the reference count. */</span>
+    <span class="n">cork_gc_decref</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span>
+<span class="nf">borrowed_reference</span><span class="p">(</span><span class="k">struct</span> <span class="n">my_obj</span> <span class="o">*</span><span class="n">obj</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* We can assume that the caller has a valid reference to obj, so</span>
+<span class="cm">     * we&#39;re just going to borrow that reference. */</span>
+
+    <span class="cm">/* Do something useful with obj */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal"><span class="pre">borrowed_reference</span></code> doesn’t need to update <em>obj</em>’s
+reference count.  We assume that the caller has a valid reference to
+<em>obj</em> when it makes the call to <code class="docutils literal"><span class="pre">borrowed_reference</span></code>.  Moreover, we
+know that the caller can’t possibly release this reference (via
+<a class="reference internal" href="#c.cork_gc_decref" title="cork_gc_decref"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_decref()</span></code></a>) until <code class="docutils literal"><span class="pre">borrowed_reference</span></code> returns.  Since
+we can guarantee that the caller’s reference to <em>obj</em> will exist for the
+entire duration of <code class="docutils literal"><span class="pre">borrowed_reference</span></code>, we don’t need to protect it
+with an <code class="docutils literal"><span class="pre">incref</span></code>/<code class="docutils literal"><span class="pre">decref</span></code> pair.</p>
+</div>
+<div class="section" id="stealing-a-reference">
+<span id="steal-ref"></span><h3>Stealing a reference<a class="headerlink" href="#stealing-a-reference" title="Permalink to this headline">¶</a></h3>
+<p>Another common pattern is for a “parent” object to maintain a reference
+to a “child” object.  (For example, a container class might maintain
+references to all of the elements in the container, assuming that the
+container and elements are all garbage-collected objects.)  When you
+have a network of objects like this, the parent object’s constructor
+will usually take in a pointer to the child object as a parameter.  If
+we strictly follow the basic referencing counting rules described above,
+you’ll end up with something like:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">child</span>  <span class="o">*</span><span class="n">child</span> <span class="o">=</span> <span class="n">child_new</span><span class="p">();</span>
+<span class="k">struct</span> <span class="n">parent</span>  <span class="o">*</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_new</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+<span class="n">cork_gc_decref</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">child_new</span></code> constructor gives us a reference to <em>child</em>.  The
+<code class="docutils literal"><span class="pre">parent_new</span></code> constructor then creates a new reference to <em>child</em>,
+which will be stored somewhere in <em>parent</em>.  We no longer need our own
+reference to <em>child</em>, so we immediately decrement its reference count.</p>
+<p>This is a common enough occurrence that many constructor functions will
+instead <em>steal</em> the reference passed in as a parameter.  This means that
+the constructor takes control of the caller’s reference.  This allows us
+to rewrite the example as:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">parent</span>  <span class="o">*</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_new_stealing</span><span class="p">(</span><span class="n">child_new</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>For functions that steal a reference, the caller <strong>cannot</strong> assume that
+the object pointed to by the stolen reference exists when the function
+returns.  (If there’s an error in <code class="docutils literal"><span class="pre">parent_new_stealing</span></code>, for instance,
+it must release the stolen reference to <em>child</em> to prevent a memory
+leak.)  If a function is going to steal a reference, but you also need
+to use the object after the function call returns, then you need to
+explicitly increment the reference count <em>before</em> calling the function:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">child</span>  <span class="o">*</span><span class="n">child</span> <span class="o">=</span> <span class="n">child_new</span><span class="p">();</span>
+<span class="k">struct</span> <span class="n">parent</span>  <span class="o">*</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_new_stealing</span><span class="p">(</span><span class="n">cork_gc_incref</span><span class="p">(</span><span class="n">child</span><span class="p">));</span>
+<span class="cm">/* Do something with child. */</span>
+<span class="cm">/* And then release our reference when we&#39;re done. */</span>
+<span class="n">cork_gc_decref</span><span class="p">(</span><span class="n">child</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It’s important to point out that not every constructor will steal the
+references passed in as parameters.  Moreover, there are some
+constructors that steal references for some parameters but not for
+others.  It entirely depends on what the “normal” use case is for the
+constructor.  If you’re almost always going to pass in a child object
+that was just created, and that will always be accessed via the
+parent, then the constructor will usually steal the reference.  If
+the child can be referenced by many parents, then the constructor
+will usually <em>not</em> steal the reference.  The documentation for each
+constructor function will explicitly state which references are
+stolen and which objects it creates new references for.</p>
+</div>
+</div>
+</div>
+<div class="section" id="writing-a-new-garbage-collected-class">
+<span id="new-gc-class"></span><h2>Writing a new garbage-collected class<a class="headerlink" href="#writing-a-new-garbage-collected-class" title="Permalink to this headline">¶</a></h2>
+<p>When you are creating a new class that you want to be managed by a
+garbage collector, there are two basic steps you need to follow:</p>
+<ul class="simple">
+<li>Implement a set of callback functions that allow the garbage collector
+to interact with objects of the new class.</li>
+<li>Use the garbage collector’s allocation functions to allocate storage
+for instance of your class.</li>
+</ul>
+<p>You won’t need to write a public destructor function, since objects of
+the new class will be destroyed automatically when the garbage collector
+determines that they’re no longer needed.</p>
+<div class="section" id="garbage-collector-callback-interface">
+<h3>Garbage collector callback interface<a class="headerlink" href="#garbage-collector-callback-interface" title="Permalink to this headline">¶</a></h3>
+<p>Each garbage-collected class must provide an implementation of the
+“callback interface”:</p>
+<dl class="type">
+<dt id="c.cork_gc_obj_iface">
+struct <code class="descname">cork_gc_obj_iface</code><a class="headerlink" href="#c.cork_gc_obj_iface" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="member">
+<dt id="c.cork_gc_obj_iface.free">
+void <code class="descname">(*free)</code><span class="sig-paren">(</span>void<em>&nbsp;*obj</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_obj_iface.free" title="Permalink to this definition">¶</a></dt>
+<dd><p>This callback is called when a garbage-collected object is about
+to be freed.  You can perform any special cleanup steps in this
+callback.  You do <strong>not</strong> need to deallocate the object’s storage,
+and you do <strong>not</strong> need to release any references that you old to
+other objects.  Both of these steps will be taken care of for you
+by the garbage collector.</p>
+<p>If your class doesn’t need any additional finalization steps, this
+entry in the callback interface can be <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.cork_gc_obj_iface.recurse">
+void <code class="descname">(*recurse)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_gc" title="cork_gc">cork_gc</a><em>&nbsp;*gc</em>, void<em>&nbsp;*obj</em>, <a class="reference internal" href="#c.cork_gc_recurser" title="cork_gc_recurser">cork_gc_recurser</a><em>&nbsp;recurse</em>, void<em>&nbsp;*ud</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_obj_iface.recurse" title="Permalink to this definition">¶</a></dt>
+<dd><p>This callback is how you inform the garbage collector of your
+references to other garbage-collected objects.</p>
+<p>The garbage collector will call this function whenever it needs to
+traverse through a graph of object references.  Your
+implementation of this callback should just call <em>recurse</em> with
+each garbage-collected object that you hold a reference to.  You
+must pass in <em>gc</em> as the first parameter to each call to
+<em>recurse</em>, and <em>ud</em> as the third parameter.</p>
+<p>Note that it’s fine to call <em>recurse</em> with a <code class="docutils literal"><span class="pre">NULL</span></code> object
+pointer, which makes it slightly easier to write implementations
+of this callback.</p>
+<p>If instances of your class can never contain references to other
+garbage-collected objects, this entry in the callback interface
+can be <code class="docutils literal"><span class="pre">NULL</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_gc_recurser">
+void <code class="descname">(*cork_gc_recurser)</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.cork_gc" title="cork_gc">cork_gc</a><em>&nbsp;*gc</em>, void<em>&nbsp;*obj</em>, void<em>&nbsp;*ud</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_recurser" title="Permalink to this definition">¶</a></dt>
+<dd><p>An opaque callback provided by the garbage collector when it calls an
+object’s <a class="reference internal" href="#c.cork_gc_obj_iface.recurse" title="cork_gc_obj_iface.recurse"><code class="xref c c-member docutils literal"><span class="pre">recurse</span></code></a> method.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="c.cork_gc">
+struct <code class="descname">cork_gc</code><a class="headerlink" href="#c.cork_gc" title="Permalink to this definition">¶</a></dt>
+<dd><p>An opaque type representing the current thread’s garbage-collection
+context.  You’ll only need to use this type when implementing a
+<a class="reference internal" href="#c.cork_gc_obj_iface.recurse" title="cork_gc_obj_iface.recurse"><code class="xref c c-member docutils literal"><span class="pre">recurse</span></code></a> function.</p>
+</dd></dl>
+
+<div class="section" id="helper-macros">
+<span id="gc-macros"></span><h4>Helper macros<a class="headerlink" href="#helper-macros" title="Permalink to this headline">¶</a></h4>
+<p>There are several macros declared in <code class="file docutils literal"><span class="pre">libcork/helpers/gc.h</span></code> that
+make it easier to define the garbage-collection interface for a new
+class.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Unlike most libcork modules, these macros are <strong>not</strong> automatically
+defined when you include the <code class="docutils literal"><span class="pre">libcork/core.h</span></code> header file, since
+they don’t include a <code class="docutils literal"><span class="pre">cork_</span></code> prefix.  Because of this, we don’t
+want to pollute your namespace unless you ask for the macros.  To do
+so, you must explicitly include their header file:</p>
+<div class="last highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/gc.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<dl class="macro">
+<dt id="c._free_">
+<code class="descname">_free_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._free_" title="Permalink to this definition">¶</a></dt>
+<dt id="c._recurse_">
+<code class="descname">_recurse_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._recurse_" title="Permalink to this definition">¶</a></dt>
+<dd><p>These macros declare the <em>free</em> and <em>recurse</em> methods for a new
+class.  The functions will be declared with exactly the signatures
+and parameter names shown in the entries for the
+<a class="reference internal" href="#c.cork_gc_obj_iface.free" title="cork_gc_obj_iface.free"><code class="xref c c-member docutils literal"><span class="pre">free</span></code></a> and
+<a class="reference internal" href="#c.cork_gc_obj_iface.recurse" title="cork_gc_obj_iface.recurse"><code class="xref c c-member docutils literal"><span class="pre">recurse</span></code></a> methods.</p>
+<p>You will almost certainly not need to refer to the method
+implementations directly, since you can use the <a class="reference internal" href="#c._gc_" title="_gc_"><code class="xref c c-macro docutils literal"><span class="pre">_gc_*_</span></code></a> macros below to declare the interface struct.  But if you do,
+they’ll be called <code class="samp docutils literal"><em><span class="pre">[name]</span></em><span class="pre">__free</span></code> and
+<code class="samp docutils literal"><em><span class="pre">[name]</span></em><span class="pre">__recurse</span></code>.  (Note the double underscore.)</p>
+</dd></dl>
+
+<dl class="macro">
+<dt id="c._gc_">
+<code class="descname">_gc_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._gc_" title="Permalink to this definition">¶</a></dt>
+<dt id="c._gc_no_free_">
+<code class="descname">_gc_no_free_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._gc_no_free_" title="Permalink to this definition">¶</a></dt>
+<dt id="c._gc_no_recurse_">
+<code class="descname">_gc_no_recurse_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._gc_no_recurse_" title="Permalink to this definition">¶</a></dt>
+<dt id="c._gc_leaf_">
+<code class="descname">_gc_leaf_</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c._gc_leaf_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the garbage-collection interface struct for a new class.  If
+you defined both <code class="docutils literal"><span class="pre">free</span></code> and <code class="docutils literal"><span class="pre">recurse</span></code> methods, you should use the
+<code class="docutils literal"><span class="pre">_gc_</span></code> variant.  If you only defined one of the methods, you should
+use <code class="docutils literal"><span class="pre">_gc_no_free_</span></code> or <code class="docutils literal"><span class="pre">_gc_no_recurse_</span></code>.  If you didn’t define
+either method, you should use <code class="docutils literal"><span class="pre">_gc_free_</span></code>.</p>
+<p>Like the method definitions, you probably won’t need to refer to the
+interface struct directly, since you can use the
+<a class="reference internal" href="#c.cork_gc_new" title="cork_gc_new"><code class="xref c c-func docutils literal"><span class="pre">cork_gc_new()</span></code></a> macro to allocate new instances of the new
+class.  But if you do, it will be called <code class="samp docutils literal"><em><span class="pre">[name]</span></em><span class="pre">__gc</span></code>.  (Note
+the double underscore.)</p>
+</dd></dl>
+
+<p>As an example, we can use these macros to define a new tree class:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/helpers/gc.h&gt;</span><span class="cp"></span>
+
+<span class="k">struct</span> <span class="n">tree</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">tree</span>  <span class="o">*</span><span class="n">left</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">tree</span>  <span class="o">*</span><span class="n">right</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">_free_</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">tree</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">obj</span><span class="p">;</span>
+    <span class="n">cork_strfree</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">_recurse_</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">tree</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">obj</span><span class="p">;</span>
+    <span class="n">recurse</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">,</span> <span class="n">ud</span><span class="p">);</span>
+    <span class="n">recurse</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">,</span> <span class="n">ud</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">_gc_</span><span class="p">(</span><span class="n">tree</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="allocating-new-garbage-collected-objects">
+<h3>Allocating new garbage-collected objects<a class="headerlink" href="#allocating-new-garbage-collected-objects" title="Permalink to this headline">¶</a></h3>
+<p>In your garbage-collected class’s constructor, you must use one of the
+following functions to allocate the object’s storage.  (The garbage
+collector hides some additional state in the object’s memory region, so
+you can’t allocate the storage using <code class="docutils literal"><span class="pre">malloc</span></code> or <a class="reference internal" href="allocation.html#c.cork_new" title="cork_new"><code class="xref c c-func docutils literal"><span class="pre">cork_new()</span></code></a>
+directly.)</p>
+<dl class="function">
+<dt id="c.cork_gc_alloc">
+void *<code class="descname">cork_gc_alloc</code><span class="sig-paren">(</span>size_t<em>&nbsp;instance_size</em>, struct <a class="reference internal" href="#c.cork_gc_obj_iface" title="cork_gc_obj_iface">cork_gc_obj_iface</a><em>&nbsp;*iface</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_alloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocates a new garbage-collected object that is <em>instance_size</em>
+bytes large.  <em>iface</em> should be a pointer to a callback interface for
+the object.  If there are any problems allocating the new instance,
+the program will abort.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_gc_new_iface">
+type *<code class="descname">cork_gc_new_iface</code><span class="sig-paren">(</span>TYPE<em>&nbsp;type</em>, struct <a class="reference internal" href="#c.cork_gc_obj_iface" title="cork_gc_obj_iface">cork_gc_obj_iface</a><em>&nbsp;*iface</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_new_iface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocates a new garbage-collected instance of <em>type</em>.  The size of
+the memory region to allocate is calculated using the <code class="docutils literal"><span class="pre">sizeof</span></code>
+operator, and the result will be automatically cast to <code class="docutils literal"><span class="pre">type</span> <span class="pre">*</span></code>.
+<em>iface</em> should be a pointer to a callback interface for the object.
+If there are any problems allocating the new instance, the program
+will abort.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_gc_new">
+struct name *<code class="descname">cork_gc_new</code><span class="sig-paren">(</span>SYMBOL<em>&nbsp;name</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_gc_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allocates a new garbage-collected instance of <code class="samp docutils literal"><span class="pre">struct</span>
+<em><span class="pre">[name]</span></em></code>.  (Note that you don’t pass in the <code class="docutils literal"><span class="pre">struct</span></code> part of the
+type name.) We assume that the garbage collection interface was
+created using one of the <a class="reference internal" href="#c._gc_" title="_gc_"><code class="xref c c-macro docutils literal"><span class="pre">_gc_*_</span></code></a> macros, using the
+same <em>name</em> parameter.</p>
+</dd></dl>
+
+<p>Using these functions, could instantiate our example tree class as
+follows:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tree</span> <span class="o">*</span>
+<span class="nf">tree_new</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">tree</span>  <span class="o">*</span><span class="n">self</span> <span class="o">=</span> <span class="n">cork_gc_new</span><span class="p">(</span><span class="n">tree</span><span class="p">);</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">name</span> <span class="o">=</span> <span class="n">cork_strdup</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">left</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="n">self</span><span class="o">-&gt;</span><span class="n">right</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Reference-counted garbage collection</a><ul>
+<li><a class="reference internal" href="#creating-a-garbage-collector">Creating a garbage collector</a></li>
+<li><a class="reference internal" href="#managing-garbage-collected-objects">Managing garbage-collected objects</a><ul>
+<li><a class="reference internal" href="#borrowing-a-reference">Borrowing a reference</a></li>
+<li><a class="reference internal" href="#stealing-a-reference">Stealing a reference</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-a-new-garbage-collected-class">Writing a new garbage-collected class</a><ul>
+<li><a class="reference internal" href="#garbage-collector-callback-interface">Garbage collector callback interface</a><ul>
+<li><a class="reference internal" href="#helper-macros">Helper macros</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#allocating-new-garbage-collected-objects">Allocating new garbage-collected objects</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="errors.html"
+                        title="previous chapter">Error reporting</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mempool.html"
+                        title="next chapter">Memory pools</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gc.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mempool.html" title="Memory pools"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="errors.html" title="Error reporting"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

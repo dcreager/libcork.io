@@ -1,0 +1,289 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Resizable arrays &#8212; libcork 0.14.1 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.14.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Bit sets" href="bitset.html" />
+    <link rel="prev" title="Data structures" href="ds.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="bitset.html" title="Bit sets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ds.html" title="Data structures"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" accesskey="U">Data structures</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="resizable-arrays">
+<span id="array"></span><h1>Resizable arrays<a class="headerlink" href="#resizable-arrays" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;libcork/ds.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>This section defines a resizable array class, similar to C++’s
+<code class="docutils literal"><span class="pre">std::vector</span></code> or Java’s <code class="docutils literal"><span class="pre">ArrayList</span></code> classes.  Our arrays can store
+any fixed-size element.  The arrays automatically resize themselves as
+necessary to store the elements that you add.</p>
+<dl class="type">
+<dt id="c.cork_array">
+<code class="descname">cork_array</code><span class="sig-paren">(</span>element_type<span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>A resizable array that contains elements of type <em>element_type</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_init">
+void <code class="descname">cork_array_init</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a new array.  You should allocate <em>array</em> yourself,
+presumably on the stack or directly within some other data type.  The
+array will start empty.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_done">
+void <code class="descname">cork_array_done</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalizes an array, freeing any storage that was allocated to hold
+the arrays elements.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_size">
+size_t <code class="descname">cork_array_size</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of elements in <em>array</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_is_empty">
+<a class="reference internal" href="basic-types.html#c.bool" title="bool">bool</a> <code class="descname">cork_array_is_empty</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>array</em> has any elements.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_void">
+void <code class="descname">cork_array_void</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_void" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all elements from <em>array</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_elements">
+T* <code class="descname">cork_array_elements</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a pointer to the underlying array of elements in <em>array</em>.  The
+elements are guaranteed to be contiguous, just like in a normal C array, but
+the particular pointer that is returned in <strong>not</strong> guaranteed to be
+consistent across function calls that modify the contents of the array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_at">
+T <code class="descname">cork_array_at</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, size_t<em>&nbsp;index</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the element in <em>array</em> at the given <em>index</em>.  Like accessing
+a normal C array, we don’t do any bounds checking.  The result is a
+valid lvalue, so it can be directly assigned to:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">cork_array</span><span class="p">(</span><span class="kt">int64_t</span><span class="p">)</span>  <span class="n">array</span><span class="p">;</span>
+<span class="n">cork_array_append</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
+<span class="n">cork_array_at</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_append">
+void <code class="descname">cork_array_append</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, T<em>&nbsp;element</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends <em>element</em> to the end of <em>array</em>, reallocating the array’s
+storage if necessary.  If you have an <code class="docutils literal"><span class="pre">init</span></code> or <code class="docutils literal"><span class="pre">reset</span></code> callback for
+<em>array</em>, it will be used to initialize the space that was allocated for the
+new element, and then <em>element</em> will be directly copied into that space
+(using <code class="docutils literal"><span class="pre">memcpy</span></code> or an equivalent).  If that is not the right copy behavior
+for the elements of <em>array</em>, then you should use
+<a class="reference internal" href="#c.cork_array_append_get" title="cork_array_append_get"><code class="xref c c-func docutils literal"><span class="pre">cork_array_append_get()</span></code></a> instead, and fill in the allocated element
+directly.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_append_get">
+T *<code class="descname">cork_array_append_get</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_append_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends a new element to the end of <em>array</em>, reallocating the array’s storage
+if necessary, returning a pointer to the new element.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_ensure_size">
+int <code class="descname">cork_array_ensure_size</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, size_t<em>&nbsp;desired_count</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_ensure_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures that <em>array</em> has enough allocated space to store <em>desired_count</em>
+elements, reallocating the array’s storage if needed.  The actual size and
+existing contents of the array aren’t changed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_copy">
+int <code class="descname">cork_array_copy</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*dest</em>, <a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*src</em>, <a class="reference internal" href="#c.cork_copy_f" title="cork_copy_f">cork_copy_f</a><em>&nbsp;*copy</em>, void<em>&nbsp;*user_data</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy elements from <em>src</em> to <em>dest</em>.  If you provide a <em>copy</em> function, it
+will be called on each element to perform the copy.  If not, we’ll use
+<code class="docutils literal"><span class="pre">memcpy</span></code> to bulk-copy the elements.</p>
+<p>If you’ve provided <a class="reference internal" href="#array-callbacks"><span class="std std-ref">callbacks</span></a> for <em>dest</em>, then those
+callbacks will be called appropriately.  We’ll call the <code class="docutils literal"><span class="pre">remove</span></code> callback
+for any existing entries (will be overwritten by the copy).  We’ll call
+<code class="docutils literal"><span class="pre">init</span></code> or <code class="docutils literal"><span class="pre">reuse</span></code> on each element entry before it’s copied.</p>
+<dl class="type">
+<dt id="c.cork_copy_f">
+typedef int <code class="descname">(*cork_copy_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, void<em>&nbsp;*dest</em>, const void<em>&nbsp;*src</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_copy_f" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.cork_array_element_size">
+size_t <code class="descname">cork_array_element_size</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_element_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the size of the elements that are stored in <em>array</em>.  You
+won’t normally need to call this, since you can just use
+<code class="docutils literal"><span class="pre">sizeof(T)</span></code>.</p>
+</dd></dl>
+
+<div class="section" id="initializing-and-finalizing-elements">
+<span id="array-callbacks"></span><h2>Initializing and finalizing elements<a class="headerlink" href="#initializing-and-finalizing-elements" title="Permalink to this headline">¶</a></h2>
+<p>You can provide callback functions that will be used to automatically initialize
+and finalize the elements of a resizable array.</p>
+<dl class="function">
+<dt id="c.cork_array_set_init">
+void <code class="descname">cork_array_set_init</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, <a class="reference internal" href="#c.cork_init_f" title="cork_init_f">cork_init_f</a><em>&nbsp;init</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_set_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_array_set_done">
+void <code class="descname">cork_array_set_done</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, <a class="reference internal" href="#c.cork_done_f" title="cork_done_f">cork_done_f</a><em>&nbsp;done</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_set_done" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_array_set_reuse">
+void <code class="descname">cork_array_set_reuse</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, <a class="reference internal" href="#c.cork_init_f" title="cork_init_f">cork_init_f</a><em>&nbsp;reuse</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_set_reuse" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_array_set_remove">
+void <code class="descname">cork_array_set_remove</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, <a class="reference internal" href="#c.cork_done_f" title="cork_done_f">cork_done_f</a><em>&nbsp;remove</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_set_remove" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_array_set_callback_data">
+void <code class="descname">cork_array_set_callback_data</code><span class="sig-paren">(</span><a class="reference internal" href="#c.cork_array" title="cork_array">cork_array</a>(T)<em>&nbsp;*array</em>, void<em>&nbsp;*user_data</em>, <a class="reference internal" href="#c.cork_free_f" title="cork_free_f">cork_free_f</a><em>&nbsp;free_user_data</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_array_set_callback_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set one of the callback functions for <em>array</em>.  There are two pairs of
+callbacks: <code class="docutils literal"><span class="pre">init</span></code> and <code class="docutils literal"><span class="pre">done</span></code>, and <code class="docutils literal"><span class="pre">reuse</span></code> and <code class="docutils literal"><span class="pre">remove</span></code>.  Within each
+pair, one callback is used to initialize an element of the array, while the
+other is used to finalize it.</p>
+<p>The <code class="docutils literal"><span class="pre">init</span></code> callback is used to initialize an element when its array entry
+is used for the first time.  If you then shrink the array (via
+<code class="xref c c-func docutils literal"><span class="pre">cork_array_clear()</span></code>, for instance), and then append elements again,
+you will reuse array entries; in this case, the <code class="docutils literal"><span class="pre">reset</span></code> callback is used
+instead.  (Having separate <code class="docutils literal"><span class="pre">init</span></code> and <code class="docutils literal"><span class="pre">reuse</span></code> callbacks can be useful
+when the elements are complex objects with deep memory requirements.  If you
+use the <code class="docutils literal"><span class="pre">init</span></code> callback to allocate that memory, and use the <code class="docutils literal"><span class="pre">reset</span></code>
+callback to “clear” it, then you can reduce some of the memory allocation
+overhead.)</p>
+<p>Similarly, the <code class="docutils literal"><span class="pre">remove</span></code> callback is used when an element is removed from
+the array, but the space that the element used isn’t being reclaimed yet.
+The <code class="docutils literal"><span class="pre">done</span></code> callback, on the other hand, is used when the array entry is
+reclaimed and freed.</p>
+<p>All of the callbacks take in an additional <em>user_data</em> parameter, in addition
+to the array entries themselves.  You provide that parameter by calling the
+<a class="reference internal" href="#c.cork_array_set_callback_data" title="cork_array_set_callback_data"><code class="xref c c-func docutils literal"><span class="pre">cork_array_set_callback_data()</span></code></a> function.  If you pass in a
+<em>free_user_data</em> function, then we will use that function to free the
+<em>user_data</em> when the array itself is finalized.</p>
+<dl class="type">
+<dt id="c.cork_init_f">
+typedef void <code class="descname">(*cork_init_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, void<em>&nbsp;*value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_init_f" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_done_f">
+typedef void <code class="descname">(*cork_done_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*user_data</em>, void<em>&nbsp;*value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_done_f" title="Permalink to this definition">¶</a></dt>
+<dt id="c.cork_free_f">
+typedef void <code class="descname">(*cork_free_f)</code><span class="sig-paren">(</span>void<em>&nbsp;*value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.cork_free_f" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Resizable arrays</a><ul>
+<li><a class="reference internal" href="#initializing-and-finalizing-elements">Initializing and finalizing elements</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ds.html"
+                        title="previous chapter">Data structures</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bitset.html"
+                        title="next chapter">Bit sets</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/array.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="bitset.html" title="Bit sets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ds.html" title="Data structures"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">libcork 0.14.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ds.html" >Data structures</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>
