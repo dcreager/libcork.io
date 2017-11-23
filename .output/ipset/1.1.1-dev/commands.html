@@ -1,0 +1,283 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Command-line utilities &#8212; IP set 1.1.1-dev-142-g2448ce0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1-dev-142-g2448ce0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="File format reference" href="file-format.html" />
+    <link rel="prev" title="IP maps" href="maps.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="file-format.html" title="File format reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="maps.html" title="IP maps"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="command-line-utilities">
+<span id="commands"></span><h1>Command-line utilities<a class="headerlink" href="#command-line-utilities" title="Permalink to this headline">¶</a></h1>
+<p>The IP set library comes with several command-line utilities for building and
+interacting with IP sets.</p>
+<div class="section" id="ipsetbuild">
+<h2>ipsetbuild<a class="headerlink" href="#ipsetbuild" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">ipsetbuild</span></code> command is used to an build binary IP set file from a text
+file containing a list of IP addresses and CIDR networks.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ ipsetbuild [options] &lt;input file&gt;...
+</pre></div>
+</div>
+<dl class="option">
+<dt id="cmdoption-ipsetbuild-output">
+<code class="descname">--output</code><code class="descclassname"> &lt;filename&gt;</code><code class="descclassname">, </code><code class="descname">-o</code><code class="descclassname"> &lt;filename&gt;</code><a class="headerlink" href="#cmdoption-ipsetbuild-output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the binary IP set file to <em>filename</em>.  If this option isn’t given,
+then the binary set will be written to standard output.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetbuild-loose-cidr">
+<code class="descname">--loose-cidr</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-l</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetbuild-loose-cidr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Be more lenient about the address portion of any CIDR network blocks found in
+the input file.  (This is described in more detail below.)</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetbuild-verbose">
+<code class="descname">--verbose</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetbuild-verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show summary information about the IP set that’s built, as well as progress
+information about the files being read and written.  If this option is not
+given, the only output will be any error, alert, or warning messages that
+occur.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetbuild-quiet">
+<code class="descname">--quiet</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-q</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetbuild-quiet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show only error message for malformed input. All warnings, alerts, and
+summary information about the IP set is suppressed.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetbuild-help">
+<code class="descname">--help</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetbuild-help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display some help text and exit.</p>
+</dd></dl>
+
+<p>Each input file must contain one IP address or network per line.  Lines
+beginning with a <code class="docutils literal"><span class="pre">#</span></code> are considered comments and are ignored.  Each IP address
+must have one of the following formats:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span>
+<span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">/</span><span class="n">cidr</span>
+<span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span>
+<span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="o">/</span><span class="n">cidr</span>
+</pre></div>
+</div>
+<p>The first two are for IPv4 addresses and networks; the second two for IPv6
+addresses and networks.  For IPv6 addresses, you can use the <code class="docutils literal"><span class="pre">::</span></code> shorthand
+notation to collapse consecutive <code class="docutils literal"><span class="pre">0</span></code> portions.</p>
+<p>If an address contains a <code class="docutils literal"><span class="pre">/cidr</span></code> suffix, then the entire CIDR network of
+addresses will be added to the set.  You must ensure that the low- order bits of
+the address are set to 0; if not, we’ll raise an error.  (If you pass in the
+<a class="reference internal" href="#cmdoption-ipsetbuild-loose-cidr"><code class="xref std std-option docutils literal"><span class="pre">--loose-cidr</span></code></a> option, we won’t perform this
+sanity check.)</p>
+<p>You can also prefix any input line with an exclamation point (<code class="docutils literal"><span class="pre">!</span></code>).  This
+causes the given address or network to be <em>removed</em> from the output set.  This
+notation can be useful to define a set that contains most of the addresses in a
+large CIDR block, except for addresses at certain “holes”.</p>
+<p>The order of the addresses and networks given to ipsetbuild does not matter.  If
+a particular address is added to the set more than once, or removed from the set
+more than once, whether on its own or via a CIDR network, then you will get a
+warning message.  (You can silence these warnings with the <a class="reference internal" href="#cmdoption-ipsetbuild-quiet"><code class="xref std std-option docutils literal"><span class="pre">--quiet</span></code></a> option.)  If an address is both added to and removed from
+the set, then the removal takes precedence, regardless of where the relevant
+lines appear in the input file.</p>
+</div>
+<div class="section" id="ipsetcat">
+<h2>ipsetcat<a class="headerlink" href="#ipsetcat" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">ipsetcat</span></code> command is used to print out the (non-sorted) contents of a
+binary IP set file.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ ipsetcat [options] &lt;input file&gt;
+</pre></div>
+</div>
+<p>To read from stdin, use <code class="docutils literal"><span class="pre">-</span></code> as the filename.</p>
+<dl class="option">
+<dt id="cmdoption-ipsetcat-output">
+<code class="descname">--output</code><code class="descclassname"> &lt;filename&gt;</code><code class="descclassname">, </code><code class="descname">-o</code><code class="descclassname"> &lt;filename&gt;</code><a class="headerlink" href="#cmdoption-ipsetcat-output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the contents of the binary IP set file to <em>filename</em>.  If this option
+isn’t given, then the contents will be written to standard output.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetcat-networks">
+<code class="descname">--networks</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-n</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetcat-networks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Where possible, group the IP addresses in the set into CIDR network blocks.
+For dense sets, this can greatly reduce the amount of output that’s
+generated.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetcat-verbose">
+<code class="descname">--verbose</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetcat-verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show progress information about the files being read and written.  If this
+option is not given, the only output will be any error messages that occur.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetcat-help">
+<code class="descname">--help</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetcat-help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display some help text and exit.</p>
+</dd></dl>
+
+<p>The output will contain one IP address or network per line.  If you give the
+<a class="reference internal" href="#cmdoption-ipsetcat-networks"><code class="xref std std-option docutils literal"><span class="pre">--networks</span></code></a> option, then we will collapse
+addresses into CIDR networks where possible.  CIDR network blocks will have one
+of the following formats:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">/</span><span class="n">cidr</span>
+<span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="o">/</span><span class="n">cidr</span>
+</pre></div>
+</div>
+<p>Individual IP addresses will have one of the following formats:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">x</span>
+<span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span><span class="p">:</span><span class="n">xxxx</span>
+</pre></div>
+</div>
+<p>Note that we never include a /32 or /128 suffix for individual addresses, even
+if you’ve requested CIDR networks via the <a class="reference internal" href="#cmdoption-ipsetcat-networks"><code class="xref std std-option docutils literal"><span class="pre">--networks</span></code></a> option.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Please note that the output is <em>unsorted</em>.  There are no guarantees made
+about the order of the IP addresses and networks in the output.</p>
+</div>
+</div>
+<div class="section" id="ipsetdot">
+<h2>ipsetdot<a class="headerlink" href="#ipsetdot" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">ipsetdot</span></code> command is used to create a <a class="reference external" href="http://www.graphviz.org/">GraphViz</a> file showing the BDD
+structure of an IP set.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ ipsetdot [options] &lt;input file&gt;
+</pre></div>
+</div>
+<p>To read from stdin, use <code class="docutils literal"><span class="pre">-</span></code> as the filename.</p>
+<dl class="option">
+<dt id="cmdoption-ipsetdot-output">
+<code class="descname">--output</code><code class="descclassname"> &lt;filename&gt;</code><code class="descclassname">, </code><code class="descname">-o</code><code class="descclassname"> &lt;filename&gt;</code><a class="headerlink" href="#cmdoption-ipsetdot-output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the GraphViz representation of the binary IP set file to <em>filename</em>.
+If this option isn’t given, then the contents will be written to standard
+output.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetdot-verbose">
+<code class="descname">--verbose</code><code class="descclassname"></code><code class="descclassname">, </code><code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetdot-verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show progress information about the files being read and written.  If this
+option is not given, the only output will be any error messages that occur.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-ipsetdot-help">
+<code class="descname">--help</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ipsetdot-help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display some help text and exit.</p>
+</dd></dl>
+
+<p>Internally, IP sets are represented by a binary-decision diagram (BDD).  The
+<code class="docutils literal"><span class="pre">ipsetdot</span></code> program can be used to produce a GraphViz file that describes the
+internal BDD structure for an IP set.  The GraphViz representation can then be
+passed in to GraphViz’s <code class="docutils literal"><span class="pre">dot</span></code> program, for instance, to generate an image of
+the BDD’s graph structure.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Command-line utilities</a><ul>
+<li><a class="reference internal" href="#ipsetbuild">ipsetbuild</a></li>
+<li><a class="reference internal" href="#ipsetcat">ipsetcat</a></li>
+<li><a class="reference internal" href="#ipsetdot">ipsetdot</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="maps.html"
+                        title="previous chapter">IP maps</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="file-format.html"
+                        title="next chapter">File format reference</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/commands.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="file-format.html" title="File format reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="maps.html" title="IP maps"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

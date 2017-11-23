@@ -1,0 +1,288 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>IP maps &#8212; IP set 1.1.1-dev-142-g2448ce0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1-dev-142-g2448ce0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command-line utilities" href="commands.html" />
+    <link rel="prev" title="IP sets" href="sets.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="commands.html" title="Command-line utilities"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sets.html" title="IP sets"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ip-maps">
+<span id="maps"></span><h1>IP maps<a class="headerlink" href="#ip-maps" title="Permalink to this headline">¶</a></h1>
+<p>The functions in this section allow you to work with <em>IP maps</em>, which map IP
+addresses to integer values.  IP maps work seamlessly with both IPv4 and IPv6
+addresses.  Every IP address is mapped to some value; each IP map has a <em>default
+value</em> that will be used for any addresses that aren’t explicitly mapped to
+something else.  (This is the map equivalent of an address not appearing in a
+set; “removing” an address from a map is the same as setting it to the map’s
+default value.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">With this definition of a map, an IP set is just an IP map that is restricted
+to the values 0 and 1.  This is actually how sets are implemented internally.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Before using any of the IP map functions, you must initialize this library
+using <a class="reference internal" href="sets.html#c.ipset_init_library" title="ipset_init_library"><code class="xref c c-func docutils literal"><span class="pre">ipset_init_library()</span></code></a>.</p>
+</div>
+<div class="section" id="creating-and-freeing-maps">
+<h2>Creating and freeing maps<a class="headerlink" href="#creating-and-freeing-maps" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.ip_map">
+struct <code class="descname">ip_map</code><a class="headerlink" href="#c.ip_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps IP addresses to integer values.  The fields of this <code class="docutils literal"><span class="pre">struct</span></code> are
+opaque; you should only use the public library functions to access the
+contents of the map.</p>
+</dd></dl>
+
+<p>There are two ways that you can work with IP maps.  The first is that you can
+allocate the space for the <a class="reference internal" href="#c.ip_map" title="ip_map"><code class="xref c c-type docutils literal"><span class="pre">ip_map</span></code></a> instance yourself — for instance,
+directly on the stack.  The second is to let the IP map library allocate the
+space for you.  Your choice determines which of the following functions you will
+use to create and free your IP maps.</p>
+<dl class="function">
+<dt id="c.ipmap_init">
+void <code class="descname">ipmap_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, int<em>&nbsp;default_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_new">
+struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a> *<code class="descname">ipmap_new</code><span class="sig-paren">(</span>int<em>&nbsp;default_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new IP map.  The map will use <em>default_value</em> as the default value
+for any addresses that aren’t explicitly mapped to something else.</p>
+<p>The <code class="docutils literal"><span class="pre">init</span></code> variant should be used if you’ve allocated space for the map
+yourself.  The <code class="docutils literal"><span class="pre">new</span></code> variant should be used if you want the library to
+allocate the space for you.  (The <code class="docutils literal"><span class="pre">new</span></code> variant never returns <code class="docutils literal"><span class="pre">NULL</span></code>; it
+will abort the program if the allocation fails.) In both cases, the map
+starts off empty.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_done">
+void <code class="descname">ipmap_done</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_done" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_free">
+void <code class="descname">ipmap_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalizes an IP map.  The <code class="docutils literal"><span class="pre">done</span></code> variant must be used if you created the
+map using <a class="reference internal" href="#c.ipmap_init" title="ipmap_init"><code class="xref c c-func docutils literal"><span class="pre">ipmap_init()</span></code></a>; the <code class="docutils literal"><span class="pre">free</span></code> variant must be used if you
+created the map using <a class="reference internal" href="#c.ipmap_new" title="ipmap_new"><code class="xref c c-func docutils literal"><span class="pre">ipmap_new()</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="adding-and-removing-elements">
+<h2>Adding and removing elements<a class="headerlink" href="#adding-and-removing-elements" title="Permalink to this headline">¶</a></h2>
+<p>We provide a variety of functions for adding and removing addresses from an IP
+map.</p>
+<dl class="function">
+<dt id="c.ipmap_ipv4_set">
+void <code class="descname">ipmap_ipv4_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ipv4_set" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_ipv6_set">
+void <code class="descname">ipmap_ipv6_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ipv6_set" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_ip_set">
+void <code class="descname">ipmap_ip_set</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ip_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates <em>map</em> so that <em>ip</em> is mapped to <em>value</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_ipv4_set_network">
+void <code class="descname">ipmap_ipv4_set_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ipv4_set_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_ipv6_set_network">
+void <code class="descname">ipmap_ipv6_set_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ipv6_set_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_ip_set_network">
+void <code class="descname">ipmap_ip_set_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em>, int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_ip_set_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates <em>map</em> so that all of the addresses in a CIDR network are mapped to
+<em>value</em>.  <em>ip</em> is one of the addresses in the CIDR network; <em>cidr_prefix</em> is
+the number of bits in the network portion of each IP address in the CIDR
+network, as defined in <a class="reference external" href="http://tools.ietf.org/html/rfc4632">RFC 4632</a>.  <em>cidr_prefix</em> must be in the range 0-32
+(inclusive) if <em>ip</em> is an IPv4 address, and in the range 0-128 (inclusive) if
+it’s an IPv6 address.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In all of the <code class="docutils literal"><span class="pre">_network</span></code> functions, if you want to strictly adhere to RFC
+4632, <em>ip</em> can only have non-zero bits in its <em>cidr_prefix</em> uppermost bits.
+All of the lower-order bits (i.e., in the host portion of the IP address)
+must be map to 0.  We do not enforce this, however.</p>
+</div>
+</div>
+<div class="section" id="querying-a-map">
+<h2>Querying a map<a class="headerlink" href="#querying-a-map" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.ipmap_get_ipv4">
+int <code class="descname">ipmap_get_ipv4</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_get_ipv4" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_get_ipv6">
+int <code class="descname">ipmap_get_ipv6</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_get_ipv6" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipmap_get_ip">
+int <code class="descname">ipmap_get_ip</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_get_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value that <em>ip</em> is mapped to in <em>map</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_is_empty">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipmap_is_empty</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>map</em> is empty.  A map is considered empty is every IP
+address is mapped to the default value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_is_equal">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipmap_is_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map1</em>, const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_is_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether every IP address is mapped to the same value in <em>map1</em> and
+<em>map2</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_memory_size">
+size_t <code class="descname">ipmap_memory_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_memory_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of bytes of memory needed to store <em>map</em>.  Note that
+adding together the storage needed for each map you use doesn’t necessarily
+give you the total memory requirements, since some storage can be shared
+between maps.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="storing-maps-in-files">
+<h2>Storing maps in files<a class="headerlink" href="#storing-maps-in-files" title="Permalink to this headline">¶</a></h2>
+<p>The functions in this section allow you to store IP maps on disk, and reload
+them into another program at a later time.  You don’t have to know the details
+of the file format to be able to use these functions; we guarantee that maps
+written with previous versions of the library will be readable by later versions
+of the library (but not vice versa).  And we guarantee that the file format is
+platform-independent; maps written on any machine will be readable on any other
+machine.</p>
+<p>(That said, if you do want to know the details of the file format, that’s
+documented in <a class="reference internal" href="file-format.html#file-format"><span class="std std-ref">another section</span></a>.)</p>
+<dl class="function">
+<dt id="c.ipmap_save">
+int <code class="descname">ipmap_save</code><span class="sig-paren">(</span>FILE<em>&nbsp;*stream</em>, const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves an IP map into <em>stream</em>.  You’re responsible for opening <em>stream</em>
+before calling this function, and for closing <em>stream</em> afterwards.  If there
+are any errors writing the map, we return <code class="docutils literal"><span class="pre">-1</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_save_to_stream">
+int <code class="descname">ipmap_save_to_stream</code><span class="sig-paren">(</span>struct <a class="reference external" href="https://libcork.io/0.15.0/stream.html#c.cork_stream_consumer" title="(in libcork v0.15.0)">cork_stream_consumer</a><em>&nbsp;*stream</em>, const struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a><em>&nbsp;*map</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_save_to_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves an IP map into a libcork <a class="reference external" href="https://libcork.io/0.15.0/stream.html#stream" title="(in libcork v0.15.0)"><span class="xref std std-ref">stream consumer</span></a>.  If
+there are any errors writing the map, we return <code class="docutils literal"><span class="pre">-1</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipmap_load">
+struct <a class="reference internal" href="#c.ip_map" title="ip_map">ip_map</a> *<code class="descname">ipmap_load</code><span class="sig-paren">(</span>FILE<em>&nbsp;*stream</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipmap_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads an IP map from <em>stream</em>.  You’re responsible for opening <em>stream</em>
+before calling this function, and for closing <em>stream</em> afterwards.  If there
+are any errors reading the map, we return <code class="docutils literal"><span class="pre">NULL</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.  You must use <a class="reference internal" href="#c.ipmap_free" title="ipmap_free"><code class="xref c c-func docutils literal"><span class="pre">ipmap_free()</span></code></a>
+to free the map when you’re done with it.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IP maps</a><ul>
+<li><a class="reference internal" href="#creating-and-freeing-maps">Creating and freeing maps</a></li>
+<li><a class="reference internal" href="#adding-and-removing-elements">Adding and removing elements</a></li>
+<li><a class="reference internal" href="#querying-a-map">Querying a map</a></li>
+<li><a class="reference internal" href="#storing-maps-in-files">Storing maps in files</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sets.html"
+                        title="previous chapter">IP sets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="commands.html"
+                        title="next chapter">Command-line utilities</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/maps.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="commands.html" title="Command-line utilities"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sets.html" title="IP sets"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,246 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>File format reference &#8212; IP set 1.1.1-dev-142-g2448ce0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1-dev-142-g2448ce0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Command-line utilities" href="commands.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="commands.html" title="Command-line utilities"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="file-format-reference">
+<span id="file-format"></span><h1>File format reference<a class="headerlink" href="#file-format-reference" title="Permalink to this headline">¶</a></h1>
+<p>This section describes the current file format used to encode IP sets on disk.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An IP set is stored internally using a <a class="reference external" href="http://en.wikipedia.org/wiki/Binary_decision_diagram)">Binary Decision Diagram</a> (BDD).  This
+structure is reflected in the on-disk format, too.  Taking an IPv4 address as an
+example, we can create a Boolean variable for each of the 32 bits in the
+address.  A set can then be thought of as a Boolean formula.  To see if a
+particular IP address is in the set, you assign each variable a <code class="docutils literal"><span class="pre">TRUE</span></code> or
+<code class="docutils literal"><span class="pre">FALSE</span></code> value depending on whether that bit is set in the IP address.  You
+then plug those variables into the formula: if the result is <code class="docutils literal"><span class="pre">TRUE</span></code>, the
+address is in the set; if it’s <code class="docutils literal"><span class="pre">FALSE</span></code>, it’s not in the set.</p>
+<p>To handle both IPv4 and IPv6 addresses, we use an initial variable (variable 0)
+that indicates whether a particular address is IPv4 or IPv6; we use <code class="docutils literal"><span class="pre">TRUE</span></code> for
+IPv4 and <code class="docutils literal"><span class="pre">FALSE</span></code> for IPv6.  IPv4 addresses then use variables 1-32 for each
+bit in the address, while IPv6 addresses use variables 1-128.  (We can reuse the
+variables like this since we’ve got variable 0 discriminating the two types of
+address.)</p>
+<p>A BDD encodes a Boolean formula as a binary search tree.  There are two kinds of
+nodes: <em>terminal</em> nodes, which are the leaves of the tree, and <em>nonterminal</em>
+nodes.  A terminal node is labeled with a value, representing the result of the
+Boolean formula; for a set, this is either <code class="docutils literal"><span class="pre">TRUE</span></code> or <code class="docutils literal"><span class="pre">FALSE</span></code>.  A nonterminal
+node is labeled with a variable number, and has <strong>low</strong> and <strong>high</strong> connections
+to other nodes.</p>
+<p>To evaluate a BDD with a particular assignment of variables, you start at the
+BDD’s root node.  At each nonterminal, you look up the specified variable.  If
+the variable is <code class="docutils literal"><span class="pre">TRUE</span></code>, you follow the <strong>high</strong> pointer; if it’s <code class="docutils literal"><span class="pre">FALSE</span></code>,
+you follow the <strong>low</strong> pointer.  When you reach a terminal node, you have the
+result of the formula.</p>
+<p>BDDs have certain restrictions placed on them for efficiency reasons.  They must
+be <em>reduced</em>, which means that the <strong>low</strong> and <strong>high</strong> connections of a
+nonterminal node must be different, and that you can’t have two nonterminal
+nodes with the same contents.  They must be <em>ordered</em>, which means that the
+variable number of a nonterminal node must be less than the variable numbers of
+its children.</p>
+<p>All of this has ramifications on the storage format, since we’re storing the BDD
+structure of a set.  To store a BDD, we only need two basic low-level storage
+elements: a <em>variable index</em>, and a <em>node ID</em>.  Since an IP set can store both
+IPv4 and IPv6 addresses, we need 129 total variables: variable 0 to determine
+which kind of address, and variables 1-128 to store the bits of the address.
+Node IDs are references to the nodes in the BDD.</p>
+<p>A terminal node has an ID ≥ 0.  We don’t explicitly store terminal nodes in the
+storage stream; instead, the node ID of a terminal node is the value associated
+with that terminal node.  For sets, node 0 is the <code class="docutils literal"><span class="pre">FALSE</span></code> node, and node 1 is
+the <code class="docutils literal"><span class="pre">TRUE</span></code> node.</p>
+<p>A nonterminal node has an ID &lt; 0.  Each nonterminal node has its own entry in
+the storage stream.  The entries are stored as a flat list, starting with
+nonterminal -1, followed by -2, etc.  Because of the tree structure of a BDD, we
+can ensure that all references to a node appear after that node in the list.</p>
+<p>Note that the BDD for an empty set has no nonterminal nodes — the formula always
+evaluates to <code class="docutils literal"><span class="pre">FALSE</span></code>, regardless of what values the variables have, so the BDD
+is just the <code class="docutils literal"><span class="pre">FALSE</span></code> terminal node.  Similarly, the BDD for a set that contains
+all IP addresses will just be the <code class="docutils literal"><span class="pre">TRUE</span></code> terminal.</p>
+</div>
+<div class="section" id="on-disk-syntax">
+<h2>On-disk syntax<a class="headerlink" href="#on-disk-syntax" title="Permalink to this headline">¶</a></h2>
+<p>With those preliminaries out of the way, we can define the actual on-disk
+structure.  Note that all integers are big-endian.</p>
+<div class="section" id="header">
+<h3>Header<a class="headerlink" href="#header" title="Permalink to this headline">¶</a></h3>
+<p>All IP sets start with a 20-byte header.  This header starts with a six-byte
+magic number, which corresponds to the ASCII string <code class="docutils literal"><span class="pre">IP</span> <span class="pre">set</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+----+----+----+----+</span>
+<span class="o">|</span> <span class="mi">49</span> <span class="o">|</span> <span class="mi">50</span> <span class="o">|</span> <span class="mi">20</span> <span class="o">|</span> <span class="mi">73</span> <span class="o">|</span> <span class="mi">65</span> <span class="o">|</span> <span class="mi">74</span> <span class="o">|</span>
+<span class="o">+----+----+----+----+----+----+</span>
+</pre></div>
+</div>
+<p>Next comes a 16-bit version field that tells us which version of the IP set file
+format is in use.  The current version is 1:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+</span>
+<span class="o">|</span> <span class="mi">00</span> <span class="o">|</span> <span class="mi">01</span> <span class="o">|</span>
+<span class="o">+----+----+</span>
+</pre></div>
+</div>
+<p>Next comes a 64-bit length field.  This gives us the length of the <em>entire</em>
+serialized IP set, including the magic number and other header fields.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+----+----+----+----+----+----+</span>
+<span class="o">|</span>                 <span class="n">Length</span>                <span class="o">|</span>
+<span class="o">+----+----+----+----+----+----+----+----+</span>
+</pre></div>
+</div>
+<p>The last header field is a 32-bit integer giving the number of nonterminal nodes
+in the set.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+----+----+</span>
+<span class="o">|</span> <span class="n">Nonterminal</span> <span class="n">count</span> <span class="o">|</span>
+<span class="o">+----+----+----+----+</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="terminal-node">
+<h3>Terminal node<a class="headerlink" href="#terminal-node" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned above, it’s possible for there to be no nonterminals in the set’s
+BDD.  If there aren’t any nonterminals, there must exactly one terminal in the
+BDD.  This indicates that the set is empty (if it’s the <code class="docutils literal"><span class="pre">FALSE</span></code> terminal), or
+contains every IP address (if it’s the <code class="docutils literal"><span class="pre">TRUE</span></code> terminal).  In this case, the
+header is followed by a 32-bit integer that encodes the value of the BDD’s
+terminal node.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+----+----+</span>
+<span class="o">|</span>  <span class="n">Terminal</span> <span class="n">value</span>   <span class="o">|</span>
+<span class="o">+----+----+----+----+</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nonterminal-nodes">
+<h3>Nonterminal nodes<a class="headerlink" href="#nonterminal-nodes" title="Permalink to this headline">¶</a></h3>
+<p>If there are any nonterminal nodes in the BDD, the header is followed by a list
+of <em>node structures</em>, one for each nonterminal.  Each node structure starts with
+an 8-bit variable index:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+</span>
+<span class="o">|</span> <span class="n">VI</span> <span class="o">|</span>
+<span class="o">+----+</span>
+</pre></div>
+</div>
+<p>Variable 0 determines whether a particular address is IPv4 or IPv6.  Variables
+1-32 represent the bits of an IPv4 address; variables 1-128 represent the bits
+of an IPv6 address.  (The bits of an address are numbered in big-endian byte
+order, and from MSB to LSB within each byte.)</p>
+<p>Next comes the <strong>low</strong> pointer and <strong>high</strong> pointer.  Each is encoded as a
+32-bit node ID.  Node IDs ≥ 0 point to terminal nodes; in this case, the node ID
+is the value of the terminal node.  Node IDs &lt; 0 point to nonterminal nodes;
+node -1 is the first node in the list, node -2 is second, etc.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+----+----+----+----+</span>
+<span class="o">|</span>    <span class="n">Low</span> <span class="n">pointer</span>    <span class="o">|</span>
+<span class="o">+----+----+----+----+</span>
+<span class="o">|</span>    <span class="n">High</span> <span class="n">pointer</span>   <span class="o">|</span>
+<span class="o">+----+----+----+----+</span>
+</pre></div>
+</div>
+<p>We use a depth-first search when writing the nodes to disk.  This ensures any
+nonterminal node reference points to a node earlier in the node list.
+Therefore, when you read in an IP set, you can make a single pass through the
+node list; whenever you encounter a node reference, you can assume that the node
+it points to has already been read in.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">File format reference</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#on-disk-syntax">On-disk syntax</a><ul>
+<li><a class="reference internal" href="#header">Header</a></li>
+<li><a class="reference internal" href="#terminal-node">Terminal node</a></li>
+<li><a class="reference internal" href="#nonterminal-nodes">Nonterminal nodes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="commands.html"
+                        title="previous chapter">Command-line utilities</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/file-format.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="commands.html" title="Command-line utilities"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

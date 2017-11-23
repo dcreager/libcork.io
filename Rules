@@ -6,6 +6,7 @@ passthrough '/0.14.1/**/*'
 passthrough '/0.14.2/**/*'
 passthrough '/0.14.3/**/*'
 passthrough '/0.15.0/**/*'
+passthrough '/ipset/1.1.1-dev/**/*'
 
 compile '/**/index.html' do
   filter :erb, :trim_mode => '-'

@@ -1,0 +1,388 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>IP sets &#8212; IP set 1.1.1-dev-142-g2448ce0 documentation</title>
+    <link rel="stylesheet" href="_static/docco-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.1-dev-142-g2448ce0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="IP maps" href="maps.html" />
+    <link rel="prev" title="IP set documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="maps.html" title="IP maps"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="IP set documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ip-sets">
+<span id="sets"></span><h1>IP sets<a class="headerlink" href="#ip-sets" title="Permalink to this headline">¶</a></h1>
+<p>The functions in this section allow you to work with sets of IP addresses.  IP
+sets work seamlessly with both IPv4 and IPv6 addresses.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Before using any of the IP set functions, you must initialize this library
+using the following function.</p>
+</div>
+<dl class="function">
+<dt id="c.ipset_init_library">
+int <code class="descname">ipset_init_library</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_init_library" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the IP set library.  This function <strong>must</strong> be called before any
+other function in the library.  It is safe to call this function multiple
+times, and from multiple threads.</p>
+</dd></dl>
+
+<div class="section" id="creating-and-freeing-sets">
+<h2>Creating and freeing sets<a class="headerlink" href="#creating-and-freeing-sets" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="c.ip_set">
+struct <code class="descname">ip_set</code><a class="headerlink" href="#c.ip_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set of IP addresses.  The fields of this <code class="docutils literal"><span class="pre">struct</span></code> are opaque; you should
+only use the public library functions to access the contents of the set.</p>
+</dd></dl>
+
+<p>There are two ways that you can work with IP sets.  The first is that you can
+allocate the space for the <a class="reference internal" href="#c.ip_set" title="ip_set"><code class="xref c c-type docutils literal"><span class="pre">ip_set</span></code></a> instance yourself — for instance,
+directly on the stack.  The second is to let the IP set library allocate the
+space for you.  Your choice determines which of the following functions you will
+use to create and free your IP sets.</p>
+<dl class="function">
+<dt id="c.ipset_init">
+void <code class="descname">ipset_init</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_init" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_new">
+struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a> *<code class="descname">ipset_new</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new IP set.  The <code class="docutils literal"><span class="pre">init</span></code> variant should be used if you’ve
+allocated space for the set yourself.  The <code class="docutils literal"><span class="pre">new</span></code> variant should be used if
+you want the library to allocate the space for you.  (The <code class="docutils literal"><span class="pre">new</span></code> variant
+never returns <code class="docutils literal"><span class="pre">NULL</span></code>; it will abort the program if the allocation fails.)
+In both cases, the set starts off empty.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_done">
+void <code class="descname">ipset_done</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_done" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_free">
+void <code class="descname">ipset_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalizes an IP set.  The <code class="docutils literal"><span class="pre">done</span></code> variant must be used if you created the
+set using <a class="reference internal" href="#c.ipset_init" title="ipset_init"><code class="xref c c-func docutils literal"><span class="pre">ipset_init()</span></code></a>; the <code class="docutils literal"><span class="pre">free</span></code> variant must be used if you
+created the set using <a class="reference internal" href="#c.ipset_new" title="ipset_new"><code class="xref c c-func docutils literal"><span class="pre">ipset_new()</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="adding-and-removing-elements">
+<h2>Adding and removing elements<a class="headerlink" href="#adding-and-removing-elements" title="Permalink to this headline">¶</a></h2>
+<p>We provide a variety of functions for adding and removing addresses from an IP
+set.</p>
+<dl class="function">
+<dt id="c.ipset_ipv4_add">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv4_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv4_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ipv6_add">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv6_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv6_add" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ip_add">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ip_add</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ip_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a single IP address to <em>set</em>.  If the IP address was not already in the
+set, we return <code class="docutils literal"><span class="pre">true</span></code>; otherwise we return <code class="docutils literal"><span class="pre">false</span></code>.  (In other words, we
+return whether the set changed as a result of this operation.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_ipv4_remove">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv4_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv4_remove" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ipv6_remove">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv6_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv6_remove" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ip_remove">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ip_remove</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ip_remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a single IP removeress from <em>set</em>.  If the IP address was previously
+in the set, we return <code class="docutils literal"><span class="pre">true</span></code>; otherwise we return <code class="docutils literal"><span class="pre">false</span></code>.  (In other
+words, we return whether the set changed as a result of this operation.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_ipv4_add_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv4_add_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv4_add_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ipv6_add_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv6_add_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv6_add_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ip_add_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ip_add_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ip_add_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an entire CIDR network of IP addresses to <em>set</em>.  <em>ip</em> is one of the
+addresses in the set; <em>cidr_prefix</em> is the number of bits in the network
+portion of each IP address in the CIDR network, as defined in <a class="reference external" href="http://tools.ietf.org/html/rfc4632">RFC 4632</a>.
+<em>cidr_prefix</em> must be in the range 0-32 (inclusive) if <em>ip</em> is an IPv4
+address, and in the range 0-128 (inclusive) if it’s an IPv6 address.</p>
+<p>We return whether the set changed as a result of this operation; if we return
+<code class="docutils literal"><span class="pre">true</span></code>, than at least one of the address in the CIDR network was not
+already present in <em>set</em>.  We cannot currently distinguish whether <em>all</em> of
+the addresses were missing (and therefore added).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_ipv4_remove_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv4_remove_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv4_remove_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ipv6_remove_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ipv6_remove_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ipv6_remove_network" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_ip_remove_network">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_ip_remove_network</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em>, unsigned int<em>&nbsp;cidr_prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_ip_remove_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an entire CIDR network of IP addresses from <em>set</em>.  <em>ip</em> is one of
+the addresses in the set; <em>cidr_prefix</em> is the number of bits in the network
+portion of each IP address in the CIDR network, as defined in <a class="reference external" href="http://tools.ietf.org/html/rfc4632">RFC 4632</a>.
+<em>cidr_prefix</em> must be in the range 0-32 (inclusive) if <em>ip</em> is an IPv4
+address, and in the range 0-128 (inclusive) if it’s an IPv6 address.</p>
+<p>We return whether the set changed as a result of this operation; if we return
+<code class="docutils literal"><span class="pre">true</span></code>, than at least one of the address in the CIDR network was present in
+<em>set</em>.  We cannot currently distinguish whether <em>all</em> of the addresses were
+present (and therefore removed).</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In all of the <code class="docutils literal"><span class="pre">_network</span></code> functions, if you want to strictly adhere to RFC
+4632, <em>ip</em> can only have non-zero bits in its <em>cidr_prefix</em> uppermost bits.
+All of the lower-order bits (i.e., in the host portion of the IP address)
+must be set to 0.  We do not enforce this, however.</p>
+</div>
+</div>
+<div class="section" id="querying-a-set">
+<h2>Querying a set<a class="headerlink" href="#querying-a-set" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="c.ipset_contains_ipv4">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_contains_ipv4</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv4" title="(in libcork v0.15.0)">cork_ipv4</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_contains_ipv4" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_contains_ipv6">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_contains_ipv6</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ipv6" title="(in libcork v0.15.0)">cork_ipv6</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_contains_ipv6" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_contains_ip">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_contains_ip</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a><em>&nbsp;*ip</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_contains_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>set</em> contains <em>ip</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_is_empty">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_is_empty</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>set</em> is empty.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_is_equal">
+<a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a> <code class="descname">ipset_is_equal</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set1</em>, const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set2</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_is_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether <em>set1</em> and <em>set2</em> contain exactly the same addresses.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_memory_size">
+size_t <code class="descname">ipset_memory_size</code><span class="sig-paren">(</span>const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_memory_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of bytes of memory needed to store <em>set</em>.  Note that
+adding together the storage needed for each set you use doesn’t necessarily
+give you the total memory requirements, since some storage can be shared
+between sets.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="iterating-through-a-set">
+<h2>Iterating through a set<a class="headerlink" href="#iterating-through-a-set" title="Permalink to this headline">¶</a></h2>
+<p>In addition to querying individual addresses, you can iterate through the entire
+contents of an IP set.  There are two iterator functions; one that provides
+every individual IP address, and one that collapses addresses into CIDR networks
+as much as possible, and returns those networks.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should not modify an IP set while you’re actively iterating through its
+contents; if you do this, you’ll get undefined behavior.</p>
+</div>
+<dl class="type">
+<dt id="c.ipset_iterator">
+struct <code class="descname">ipset_iterator</code><a class="headerlink" href="#c.ipset_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>An iterator object that lets you query all of the addresses in an IP set.</p>
+<dl class="member">
+<dt id="c.ipset_iterator.addr">
+struct <a class="reference external" href="https://libcork.io/0.15.0/net-addresses.html#c.cork_ip" title="(in libcork v0.15.0)">cork_ip</a>  <code class="descname">addr</code><a class="headerlink" href="#c.ipset_iterator.addr" title="Permalink to this definition">¶</a></dt>
+<dd><p>If iterating through individual addresses, this contains the address that
+the iterator currently points at.  If iterating through CIDR networks,
+this is the representative address of the current network.</p>
+</dd></dl>
+
+<dl class="member">
+<dt id="c.ipset_iterator.cidr_prefix">
+unsigned int  <code class="descname">cidr_prefix</code><a class="headerlink" href="#c.ipset_iterator.cidr_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>If iterating through CIDR networks, this is the CIDR prefix of the current
+network.  If iterating through individual IP addresses, this will always
+be <code class="docutils literal"><span class="pre">32</span></code> or <code class="docutils literal"><span class="pre">128</span></code>, depending on whether <em>addr</em> contains an IPv4 or IPv6
+address.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_iterate">
+struct <a class="reference internal" href="#c.ipset_iterator" title="ipset_iterator">ipset_iterator</a> *<code class="descname">ipset_iterate</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, <a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a><em>&nbsp;desired_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_iterate" title="Permalink to this definition">¶</a></dt>
+<dt id="c.ipset_iterate_networks">
+struct <a class="reference internal" href="#c.ipset_iterator" title="ipset_iterator">ipset_iterator</a> *<code class="descname">ipset_iterate_networks</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em>, <a class="reference external" href="https://libcork.io/0.15.0/basic-types.html#c.bool" title="(in libcork v0.15.0)">bool</a><em>&nbsp;desired_value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_iterate_networks" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>desired_value</em> is <code class="docutils literal"><span class="pre">true</span></code>, then we return an iterator that will produce
+the IP addresses that are present in <em>set</em>.  If it’s <code class="docutils literal"><span class="pre">false</span></code>, then the
+iterator will produce the IP addresses that are <em>not</em> in <em>set</em>.</p>
+<p>The <code class="docutils literal"><span class="pre">_networks</span></code> variant will summarize the IP addresses into CIDR networks,
+to reduce the number of items that are reported by the iterator.  (This can
+be especially useful (necessary?) if your set contains any /8 or /16 IPv4
+networks, for instance; or even worse, a /64 IPv6 network.)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_iterator_advance">
+void <code class="descname">ipset_iterator_advance</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ipset_iterator" title="ipset_iterator">ipset_iterator</a><em>&nbsp;*iterator</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_iterator_advance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Advance <em>iterator</em> to the next IP address or network in its underlying set.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_iterator_free">
+void <code class="descname">ipset_iterator_free</code><span class="sig-paren">(</span>struct <a class="reference internal" href="#c.ipset_iterator" title="ipset_iterator">ipset_iterator</a><em>&nbsp;*iterator</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_iterator_free" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frees an IP set iterator.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="storing-sets-in-files">
+<h2>Storing sets in files<a class="headerlink" href="#storing-sets-in-files" title="Permalink to this headline">¶</a></h2>
+<p>The functions in this section allow you to store IP sets on disk, and reload
+them into another program at a later time.  You don’t have to know the details
+of the file format to be able to use these functions; we guarantee that sets
+written with previous versions of the library will be readable by later versions
+of the library (but not vice versa).  And we guarantee that the file format is
+platform-independent; sets written on any machine will be readable on any other
+machine.</p>
+<p>(That said, if you do want to know the details of the file format, that’s
+documented in <a class="reference internal" href="file-format.html#file-format"><span class="std std-ref">another section</span></a>.)</p>
+<dl class="function">
+<dt id="c.ipset_save">
+int <code class="descname">ipset_save</code><span class="sig-paren">(</span>FILE<em>&nbsp;*stream</em>, const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves an IP set into <em>stream</em>.  You’re responsible for opening <em>stream</em>
+before calling this function, and for closing <em>stream</em> afterwards.  If there
+are any errors writing the set, we return <code class="docutils literal"><span class="pre">-1</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_save_to_stream">
+int <code class="descname">ipset_save_to_stream</code><span class="sig-paren">(</span>struct <a class="reference external" href="https://libcork.io/0.15.0/stream.html#c.cork_stream_consumer" title="(in libcork v0.15.0)">cork_stream_consumer</a><em>&nbsp;*stream</em>, const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_save_to_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves an IP set into a libcork <a class="reference external" href="https://libcork.io/0.15.0/stream.html#stream" title="(in libcork v0.15.0)"><span class="xref std std-ref">stream consumer</span></a>.  If
+there are any errors writing the set, we return <code class="docutils literal"><span class="pre">-1</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_load">
+struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a> *<code class="descname">ipset_load</code><span class="sig-paren">(</span>FILE<em>&nbsp;*stream</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads an IP set from <em>stream</em>.  You’re responsible for opening <em>stream</em>
+before calling this function, and for closing <em>stream</em> afterwards.  If there
+are any errors reading the set, we return <code class="docutils literal"><span class="pre">NULL</span></code> and fill in a libcork
+<a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.  You must use <a class="reference internal" href="#c.ipset_free" title="ipset_free"><code class="xref c c-func docutils literal"><span class="pre">ipset_free()</span></code></a>
+to free the set when you’re done with it.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="c.ipset_save_dot">
+int <code class="descname">ipset_save_dot</code><span class="sig-paren">(</span>FILE<em>&nbsp;*stream</em>, const struct <a class="reference internal" href="#c.ip_set" title="ip_set">ip_set</a><em>&nbsp;*set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.ipset_save_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a <a class="reference external" href="http://www.graphviz.org/">GraphViz</a> <code class="docutils literal"><span class="pre">dot</span></code> representation of the BDD graph used to store
+<em>set</em>, and writes this graph representation to <em>stream</em>.  You’re responsible
+for opening <em>stream</em> before calling this function, and for closing <em>stream</em>
+afterwards.  If there are any errors writing the set, we return <code class="docutils literal"><span class="pre">-1</span></code> and
+fill in a libcork <a class="reference external" href="https://libcork.io/0.15.0/errors.html#errors" title="(in libcork v0.15.0)"><span class="xref std std-ref">error condition</span></a>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IP sets</a><ul>
+<li><a class="reference internal" href="#creating-and-freeing-sets">Creating and freeing sets</a></li>
+<li><a class="reference internal" href="#adding-and-removing-elements">Adding and removing elements</a></li>
+<li><a class="reference internal" href="#querying-a-set">Querying a set</a></li>
+<li><a class="reference internal" href="#iterating-through-a-set">Iterating through a set</a></li>
+<li><a class="reference internal" href="#storing-sets-in-files">Storing sets in files</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">IP set documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="maps.html"
+                        title="next chapter">IP maps</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="maps.html" title="IP maps"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="IP set documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">IP set 1.1.1-dev-142-g2448ce0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2009-2012, RedJack, LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>
