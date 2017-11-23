@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+compile '/**/index.html' do
+  filter :erb, :trim_mode => '-'
+  layout '/default.html'
+  write item.identifier
+end
+
+compile '/**/*.html' do
+  filter :erb, :trim_mode => '-'
+  layout (item[:layout] or '/default.html')
+  write item.identifier.without_ext + '/index.html'
+end
+
+compile '/**/*.markdown' do
+  filter :erb, :trim_mode => '-'
+  filter :kramdown
+  layout (item[:layout] or '/default.html')
+  write item.identifier.without_ext + '/index.html'
+end
+
+compile '/**/.htaccess' do
+  write item.identifier
+end
+
+compile '/**/*' do
+  if not item.binary?
+    filter :erb, :trim_mode => '-'
+  end
+  write item.identifier
+end
+
+layout '/**/*', :erb, :trim_mode => '-'

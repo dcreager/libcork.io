@@ -1,0 +1,26 @@
+text_extensions: [ 'c', 'coffee', 'css', 'erb', 'haml', 'handlebars', 'hb', 'htm', 'html', 'js', 'less', 'markdown', 'md', 'ms', 'mustache', 'pandoc', 'php', 'rb', 'ronn', 'sass', 'scss', 'txt', 'xhtml', 'xml' ]
+output_dir: .output
+index_filenames: [ 'index.html' ]
+enable_output_diff: false
+
+prune:
+  auto_prune: true
+  exclude: [ '.git', '.hg', '.svn', 'CVS' ]
+
+base_url: https://libcork.io/
+author_name: The libcork authors
+author_uri: https://libcork.io/
+
+identifier_type: full
+string_pattern_type: glob
+
+data_sources:
+  - type: filesystem
+    extra_files:
+      - "**/.htaccess"
+
+deploy:
+  default:
+    kind: rsync
+    dst: "libcork@libcork.io:libcork.io"
+    options: [ '-aPz', '--delete-after' ]
